@@ -287,10 +287,10 @@
 					"allow": "#1299"
 				},
 				"one-backend-python": {
-					"allow": "#1299"
+					"leg": "examples/python"
 				},
 				"tdk-example": {
-					"allow": "#1299"
+					"leg": "examples/default"
 				}
 			},
 			"interactions": []
@@ -308,10 +308,10 @@
 					"allow": "#1300"
 				},
 				"windows": {
-					"allow": "#1300"
+					"leg": "platforms/windows"
 				},
 				"wsl2": {
-					"allow": "#1300"
+					"leg": "platforms/wsl2"
 				}
 			},
 			"interactions": []
