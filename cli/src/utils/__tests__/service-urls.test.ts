@@ -78,9 +78,9 @@ describe("resolveServicePath", () => {
   });
 
   it("prefers an explicit apiPath", () => {
-    expect(resolveServicePath(makeResource("menu-api", "backend", { apiPath: "/api/v2/menu" }))).toBe(
-      "/api/v2/menu",
-    );
+    expect(
+      resolveServicePath(makeResource("menu-api", "backend", { apiPath: "/api/v2/menu" })),
+    ).toBe("/api/v2/menu");
   });
 
   it("prefers an explicit basePath for frontends", () => {

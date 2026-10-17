@@ -18,7 +18,10 @@ describe("makeResource", () => {
   });
 
   it("defaults the extra config to empty", () => {
-    expect(makeResource("worker", "worker").config).toEqual({ appName: "worker", appType: "worker" });
+    expect(makeResource("worker", "worker").config).toEqual({
+      appName: "worker",
+      appType: "worker",
+    });
   });
 });
 
