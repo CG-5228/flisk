@@ -36,7 +36,7 @@ M1() { # write the migrator's service.json and register it
 
 M2() { # tdk status lists the registered resource as a migrator
   log "M2 tdk status lists $RES as a migrator"
-  common_wait_status "$RES" migrator
+  common_wait_status "$RES" worker
 }
 
 e2e_main "$@"
