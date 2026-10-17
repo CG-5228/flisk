@@ -52,7 +52,7 @@ B4() { # tdk restart, then the API answers /health again through Traefik
 
 B5() { # restart with Tilt unreachable prints one TILT_NOT_RUNNING error envelope and exits 1
   log "B5 tdk restart with no Tilt on the port: one error envelope"
-  common_error_envelope BREAK_ME restart "$API" --port 1 --json
+  common_error_envelope TILT_NOT_RUNNING restart "$API" --port 1 --json
 }
 
 e2e_main "$@"
