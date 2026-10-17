@@ -17,7 +17,6 @@ e2e_init windows-binary windows-binary
 windows_path() { if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s' "$1"; fi; }
 
 WB1() { # the built Windows binary: checksums, version, bundled runtime layout
-  die "DELIBERATE BREAK for #1300 (to be reverted)"
   log "WB1 release candidate Windows binary"
   [ -n "${VERSION:-}" ] || die "set VERSION to the release candidate's version"
   [ -d "$REPO_ROOT/release-dist" ] || die "download the release candidate into $REPO_ROOT/release-dist first"
