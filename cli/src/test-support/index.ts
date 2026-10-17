@@ -9,3 +9,4 @@ export {
   type ServiceSpec,
   type TempProjectSpec,
 } from "./temp-project.js";
+export { type ExitCapture, captureExit, makeResource } from "./doubles.js";
