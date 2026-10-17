@@ -10,7 +10,7 @@ import { createMachineEnvelope, writeMachineError } from "../utils/machine-outpu
 import { findProjectRoot } from "../utils/paths.js";
 import { buildServicePorts } from "../utils/status-ports.js";
 
-const SESSION_REQUEST_TIMEOUT_MS = 10_000;
+const SESSION_REQUEST_TIMEOUT_MS = 30_000;
 
 /** GET with node:http because fetch silently drops a custom Host header, which is what Traefik routes on. */
 export function httpGet(
