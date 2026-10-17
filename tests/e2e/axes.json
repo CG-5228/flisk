@@ -287,10 +287,10 @@
 					"allow": "#1299"
 				},
 				"one-backend-python": {
-					"allow": "#1299"
+					"leg": "examples/python"
 				},
 				"tdk-example": {
-					"allow": "#1299"
+					"leg": "examples/default"
 				}
 			},
 			"interactions": []
