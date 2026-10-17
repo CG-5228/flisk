@@ -23,6 +23,7 @@ e2e_init wsl2 wsl2
 e2e_cases() { jq -r '.cases | join(" ")' "$SUITE_DIR/suite.json"; }
 
 WS1() { # record and require a real WSL2 kernel, then copy the checkout to /root/tdk-ci
+  die "DELIBERATE BREAK for #1300 (to be reverted)"
   log "WS1 record and require a real WSL2 kernel"
   mkdir -p "$REPO_ROOT/wsl2-evidence"
   ln -s "$REPO_ROOT/wsl2-evidence" /root/tdk-evidence

@@ -20,6 +20,7 @@ e2e_init windows windows
 windows_path() { if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s' "$1"; fi; }
 
 W1() { # typecheck the CLI, build it and run its help
+  die "DELIBERATE BREAK for #1300 (to be reverted)"
   log "W1 typecheck, build and run the CLI help"
   (cd "$REPO_ROOT" && npm run typecheck)
   (cd "$REPO_ROOT/cli" && npm run build)
