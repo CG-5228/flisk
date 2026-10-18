@@ -1,7 +1,5 @@
 # One Python backend on your machine
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 This example is one authored `service.json` and one small FastAPI service on Python 3.12. TDK creates the local orchestration files; Docker builds the service and Tilt runs it. Live reload does not work yet: every edit rebuilds the image (see [Live reload](#live-reload)). No Kubernetes cluster is needed, and you do not need Bun, Node.js, or Python installed on your machine for the service itself.
 
 It is the Python counterpart of the [one-backend example](../one-backend/README.md). The source in `services/one-backend-python/api` is exactly what this command generates:

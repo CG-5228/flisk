@@ -1,7 +1,5 @@
 # symfony
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Stack:** a real Symfony skeleton (`composer create-project symfony/skeleton`, Symfony 8.1, PHP 8.4) plus one controller file
 
 **Notes:**

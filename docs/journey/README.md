@@ -1,7 +1,5 @@
 # The TDK Journey 🗺️
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 ![The TDK Journey map](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/journey-map/docs/journey/map.svg)
 
 ![The TDK Hacktoberfest map](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/journey-map/docs/journey/hacktoberfest.svg)

@@ -7,8 +7,6 @@ updated: 2026-10-18
 
 # Topologies (Incremental Migration)
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 This folder holds the Starlark modules that turn `service.json` manifests into Docker Compose and Tilt resources for local development. TDK generates these for `tdk up` on your machine; it does not generate Kubernetes deployment manifests.
 
 ## How a `service.json` becomes running resources

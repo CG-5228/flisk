@@ -1,7 +1,5 @@
 # hapi
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Stack:** a minimal Hapi 21 app (Node 22), two files: `server.js` and `package.json`
 
 **Notes:**

@@ -1,7 +1,5 @@
 # Bring-your-own examples
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 Each folder is a small app plus a `Dockerfile` that meets the container contract in
 [docs/byo.md](../../docs/byo.md): read `PORT`, bind `0.0.0.0`, answer a health route.
 Register one in a TDK project with:

@@ -1,7 +1,5 @@
 # TDK Landscape Tilt SDK
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 ## 🏗️ Architecture Overview
 
 This SDK provides a **professional, layered architecture** for managing 5000+ lines of Tilt/Starlark configuration code.

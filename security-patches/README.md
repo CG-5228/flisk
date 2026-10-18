@@ -1,7 +1,5 @@
 # Temporary dependency security patches
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 These packages are local downstream patches for the example dependency trees. The readable source diffs are in `braces.patch` and `node-forge.patch`; the matching packed packages are in each example's `vendor/` directory. Each package starts from the exact npm release previously in its lockfile and applies the cited upstream security change. Replace the local packages with official npm releases when they include these fixes.
 
 - `braces` `3.0.4-tdk.1`: based on npm `braces@3.0.3`; applies source changes from [FSDevelop/braces commit `28d440b5dd449dbf1fe6f3506cf94ecca4d02660`](https://github.com/FSDevelop/braces/commit/28d440b5dd449dbf1fe6f3506cf94ecca4d02660), the closed upstream PR #72 for GHSA-vfj7-8cjw-p6xm. It bounds parsing and recursive AST walks at 100 levels. Used by the MikroORM and Nitro examples.

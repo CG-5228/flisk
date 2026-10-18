@@ -1,7 +1,5 @@
 # create-bati
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Stack:** a real `create-bati` app (React + Hono)
 
 **Notes:** scaffolder runs at build time; production build, server reads `PORT`; health path `/`

@@ -1,7 +1,5 @@
 # 🔐 Infisical Starlark Generators - Complete Documentation
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 ## Overview
 
 The Infisical Starlark generators provide a complete, programmatic way to manage secret injection in the TDK CLI. This replaces shell-based configuration with type-safe Starlark code.

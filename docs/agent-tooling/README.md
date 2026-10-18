@@ -1,7 +1,5 @@
 # Connect Codex or Claude Code to the TDK MCP server
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 TDK includes a local Model Context Protocol (MCP) server in its CLI. Once TDK is installed, clients can launch `tdk mcp` over stdio; there is no separate MCP package or hosted endpoint. Start the client from the TDK project directory, or set that directory explicitly in the client configuration, so project tools find `.tdk/project.json`.
 
 This guide covers Codex and Claude Code. You can ask for operations in plain language; you do not need to write JavaScript or call the tools by name.

@@ -1,7 +1,5 @@
 # turso
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Stack:** Turso's open-source server (libSQL `sqld`), from `ghcr.io/tursodatabase/libsql-server:latest`, wrapped in a three-line Dockerfile
 
 **Notes:**

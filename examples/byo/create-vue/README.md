@@ -1,7 +1,5 @@
 # create-vue
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Stack:** a real `create-vue` app
 
 **Notes:** scaffolder runs at build time; Vite `--host 0.0.0.0`

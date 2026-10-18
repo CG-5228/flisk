@@ -1,7 +1,5 @@
 # Container scale benchmark
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 Release gate for the north star: **100 ERP services on a 16 GB machine without removing features**.
 
 ```bash

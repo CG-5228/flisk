@@ -1,7 +1,5 @@
 # deno-fresh
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Stack:** a real Deno Fresh 2 app (`jsr:@fresh/init`, Vite, no Tailwind), on the `denoland/deno` image
 
 **Notes:** scaffolder runs at build time with `--force --tailwind=false --vscode=false --docker=false`; `deno task dev --host

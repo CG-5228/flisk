@@ -1,7 +1,5 @@
 # Fuzz tests
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 Property-based tests ([fast-check](https://fast-check.dev)) for code that reads untrusted `service.json` input.
 
 ```bash

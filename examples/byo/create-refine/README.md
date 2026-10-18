@@ -1,7 +1,5 @@
 # create-refine
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Stack:** a real `create-refine-app` project (Vite)
 
 **Notes:** scaffolder only reads answers from a terminal, so the Dockerfile pipes Enter presses to accept defaults; Vite `--host 0.0.0.0`

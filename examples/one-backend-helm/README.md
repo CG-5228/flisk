@@ -1,7 +1,5 @@
 # One backend with Helm
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 This is a handwritten Kubernetes values example for the backend in [`one-backend`](../one-backend/README.md). It targets bjw-s-labs/app-template chart `5.2.1` and uses the same application source, image repository/tag, and HTTP port. The sample is a starting point, not a supported production chart.
 
 Build and publish the image from `../one-backend/services/one-backend/api` using your existing CI or image workflow to a registry your cluster can access. Update the repository and tag in `values.yaml` to that image. The local TDK workflow builds the service for Docker + Tilt; it does not publish it for the cluster.

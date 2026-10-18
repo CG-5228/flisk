@@ -1,7 +1,5 @@
 # elysia
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Stack:** a real Elysia app from `bun create elysia` (Bun, `oven/bun:1`)
 
 **Notes:**

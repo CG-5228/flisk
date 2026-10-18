@@ -1,7 +1,5 @@
 # ptah
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Stack:** [Ptah](https://github.com/stokaro/ptah) 0.12 applying `migrations/*.sql` to TDK's Postgres with
 `ptah migrations up`, then exiting.
 

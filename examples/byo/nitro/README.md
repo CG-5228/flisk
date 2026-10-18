@@ -1,7 +1,5 @@
 # nitro
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Stack:** Node, Nitro 2
 
 **Notes:** builds `.output`, sets `HOST=0.0.0.0`

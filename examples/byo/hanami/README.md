@@ -1,7 +1,5 @@
 # hanami
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Stack:** a real `hanami new` app (Hanami 2, Ruby 3.4, `--skip-db --skip-assets`)
 
 **Notes:**

@@ -1,7 +1,5 @@
 # 📋 Manifest Module
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Status:** ✅ All Phases Complete! (Phase 1-5)  
 **Location:** `engine/topologies/tilt/manifest/`  
 **Purpose:** Clean, modular manifest parsing, loading, validation, and discovery integration system

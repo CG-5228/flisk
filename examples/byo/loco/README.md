@@ -1,7 +1,5 @@
 # loco
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Stack:** a real `loco new` app (Rust, no database, async background workers, no assets)
 
 **Notes:** `loco new --db none --bg async --assets none` runs at build time; multi-stage build, so the final image holds

@@ -1,7 +1,5 @@
 # flask
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Stack:** a minimal Flask 3 app (Python 3.12), `app.py`, `requirements.in` (the dependencies you want), and `requirements.txt` (hash-locked from it with `uv pip compile --generate-hashes`)
 
 **Notes:**

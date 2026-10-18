@@ -1,7 +1,5 @@
 # Tilt IDE Components
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 Web-based IDE features integrated into the TDK Landscape Tilt development environment.
 
 ## Overview

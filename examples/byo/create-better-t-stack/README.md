@@ -1,7 +1,5 @@
 # create-better-t-stack
 
-[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
-
 **Stack:** a real `create-better-t-stack` monorepo (TanStack Router web + Hono server, no database)
 
 **Notes:** needs npm >= 11.16 (the image upgrades it); runs the API server in the background and the web
