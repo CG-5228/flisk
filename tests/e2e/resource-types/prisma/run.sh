@@ -27,7 +27,7 @@ RESOURCES=("$API" "$MIGRATOR")
 api_container() { running_container "$API"; }
 api_running() { [ -n "$(api_container)" ]; }
 db_healthy() { # the routed /health/db answers 200 with ok: 1 from Postgres
-  [ "$(traefik_request "$API" /health/db -o "$OUT/health-db.json" -w '%{http_code}')" = "200" ] && jq -e '.ok == 2 and (.database | length > 0)' "$OUT/health-db.json" >/dev/null
+  [ "$(traefik_request "$API" /health/db -o "$OUT/health-db.json" -w '%{http_code}')" = "200" ] && jq -e '.ok == 1 and (.database | length > 0)' "$OUT/health-db.json" >/dev/null
 }
 
 # write_api_index <file>: the API answers /health/db by running `select 1` through Bun's built-in Postgres client on DATABASE_URL.
