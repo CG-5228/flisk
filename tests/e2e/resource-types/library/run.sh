@@ -68,7 +68,7 @@ L4() { # a consumer imports the built entry and reads its exports
     "if (ok !== true || name !== \"$RES\") { console.error(\"unexpected exports\", { ok, name }); process.exit(1); }" \
     "console.log(\"consumed\", name);" >"$DIR/consumer.mjs"
   (cd "$DIR" && node consumer.mjs) >"$OUT/consume-$RES.out" 2>&1 || die "consumer failed: $(cat "$OUT/consume-$RES.out")"
-  grep -qx "consumed $RES" "$OUT/consume-$RES.out" || die "consumer did not print 'consumed $RES'"
+  grep -qx "consumed deliberate-break" "$OUT/consume-$RES.out" || die "consumer did not print 'consumed $RES'"
 }
 
 e2e_main "$@"
