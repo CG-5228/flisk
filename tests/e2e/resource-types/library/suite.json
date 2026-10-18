@@ -18,7 +18,6 @@
     "L4"
   ],
   "triggers": [
-    "pr",
     "nightly",
     "release",
     "manual"
