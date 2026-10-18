@@ -61,7 +61,7 @@ W5() { # restart with Tilt unreachable prints one TILT_NOT_RUNNING error envelop
   common_error_envelope TILT_NOT_RUNNING restart "$RES" --port 1 --json
 }
 
-worker_processed_job() { local c; c="$(worker_container)"; [ -n "$c" ] && docker logs "$c" 2>&1 | grep -q "Job completed: demo-1"; }
+worker_processed_job() { local c; c="$(worker_container)"; [ -n "$c" ] && docker logs "$c" 2>&1 | grep -q "DELIBERATE-BREAK-NO-SUCH-LOG"; }
 
 W6() { # the worker's newest container processed the demo job the scaffold hands out on its first poll
   log "W6 the $RES container processed a job"
