@@ -2,6 +2,12 @@
 
 # TDK CLI — generate and run your whole tech stack without the setup pain
 
+### Stop letting AI hallucinate your local infrastructure.
+
+LLMs are brilliant at writing application logic, but notoriously terrible at maintaining local infrastructure. Every time your AI rewrites a `Dockerfile`, misconfigures a `Tiltfile`, or breaks an `nginx.conf`, it wastes your developer focus and burns thousands of unnecessary API tokens.
+
+**TDK CLI Core** bridges the gap. You write the clean web application logic, and TDK instantly autodetects your stack to generate, link, and orchestrate the local environment for you. 
+
 ## Build your app in one click
 
 Fastest way (recommended): open the [TDK starter](https://github.com/tdk-landscape/tdk-cli-starter) in a ready-to-use environment.
@@ -86,12 +92,6 @@ English | [简体中文](docs/README-zh_cn.md) | [繁體中文](docs/README-zh_t
 [Website](https://tdk-landscape.github.io/tdk-website/) · [Quickstart](https://tdk-landscape.github.io/tdk-website/docs/quickstart/) · [Examples](https://tdk-landscape.github.io/tdk-website/docs/examples/) · [Awesome TDK](https://github.com/tdk-landscape/awesome-tdk-framework) · [Demo](https://tdk-landscape.github.io/tdk-demo-animation/) · [Report a bug](https://github.com/tdk-landscape/tdk-cli-core/issues)
 
 </div>
-
-### Stop letting AI hallucinate your local infrastructure.
-
-LLMs are brilliant at writing application logic, but notoriously terrible at maintaining local infrastructure. Every time your AI rewrites a `Dockerfile`, misconfigures a `Tiltfile`, or breaks an `nginx.conf`, it wastes your developer focus and burns thousands of unnecessary API tokens.
-
-**TDK CLI Core** bridges the gap. You write the clean web application logic, and TDK instantly autodetects your stack to generate, link, and orchestrate the local environment for you. 
 
 ### ⚡ Zero-Config Local Stacks in About 14 Seconds
 No vendor lock-in. No tedious plumbing. Run a single command to natively orchestrate **72 different integration tiers** including:
