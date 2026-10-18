@@ -5,7 +5,21 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Command } from "commander";
 import { describe, expect, it } from "vitest";
-import { createTempDir, createTempProject, runTdk } from "../../test-support/index.js";
+import {
+  createTempDir,
+  createTempProject,
+  runCommandInProcess,
+  runTdk,
+} from "../../test-support/index.js";
+import { configCommand } from "../config.js";
+import { downCommand } from "../down.js";
+import { ejectCommand } from "../eject.js";
+import { networksCommand } from "../networks.js";
+import { projectsCommand } from "../projects.js";
+import { resourcesCommand } from "../resources.js";
+import { stacksCommand } from "../stacks.js";
+import { statusCommand } from "../status.js";
+import { upCommand } from "../up.js";
 
 const commandsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -114,22 +128,48 @@ const YES_MATRIX: Array<{
 ];
 
 /**
+ * `agent sessions --json` fails before any request when the session id is missing, so its error envelope runs in a
+ * temp project with no agent process. The `site` names the command the same way the completeness check does.
+ */
+const AGENT_SESSIONS_JSON: {
+  site: string;
+  command: string[];
+  project: Parameters<typeof createTempProject>[0];
+} = {
+  site: "agent sessions --json",
+  command: ["agent", "sessions", "assistant"],
+  project: { stacks: { api: { assistant: { appType: "agent", port: 3200 } } } },
+};
+
+/**
+ * `doctor --json` runs its probes with or without a project and prints one report. Its exit status depends on the
+ * host (a machine without Docker exits 1), so this row checks the envelope only, not the status.
+ */
+const DOCTOR_JSON: { site: string; command: string[] } = {
+  site: "doctor --json",
+  command: ["doctor", "--no-ping"],
+};
+
+/**
  * Commands and subcommands that register one of the three flags but have no matrix row yet. Each entry says why.
  * Shrinking this list is the work; a new entry needs a reason.
  */
 const EXEMPT: Record<string, string> = {
-  "agent sessions --json": "lists live agent sessions; needs the agent host",
-  "doctor --json":
-    "checks the host toolchain and probes ports; its own test file covers the report",
-  "doctor --dry-run": "only applies with --fix; covered by the doctor test file",
-  "doctor --yes": "only applies with --fix; covered by the doctor test file",
-  "down --json": "stops containers; needs a running stack",
-  "logs --json": "reads container logs; needs a running stack",
-  "restart --json": "restarts containers; needs a running stack",
-  "runtime --json": "reports runtime state through Docker",
-  "up --json": "starts containers; needs Docker",
+  "doctor --dry-run":
+    "with --fix, prints the Dry run line only when a repair is planned; repairs come from the host's Docker networks and leftover probes, so a temp project may plan none",
+  "doctor --yes":
+    "with --fix, removes unused Docker networks on the host's Docker daemon; a test run would act on that daemon",
+  "down --json":
+    "runs tilt down against the host's Tilt binary and stops any tilt up for the project; needs Tilt and a running stack",
+  "logs --json":
+    "reads logs through the host's Tilt UI port; needs Tilt, and the output depends on whether a stack is running",
+  "restart --json":
+    "triggers a resource on the host's Tilt UI port, and isTiltAvailable checks the host's tilt binary; needs Tilt and a running stack",
+  "runtime --json":
+    "checks the packaged install's bundled assets, so a source checkout reports ok: false; prints {ok, assetRoot, missing, templateErrors}, not the envelope",
+  "up --json": "starts containers through the host's Docker, Compose and Tilt; needs Docker",
   "upgrade --dry-run":
-    "compares the install with origin/HEAD over git; its dry-run path prints no Dry run line",
+    "compares the installed CLI with origin over git on the host, and prints 'Dry run:' rather than 'Dry run -'",
   "upgrade --yes":
     "updates the installed CLI checkout, so a test run would rebuild the repo under test",
 };
@@ -188,6 +228,8 @@ function coveredSites(): Set<string> {
     ...JSON_MATRIX.map((row) => `${row.command.join(" ")} --json`),
     ...DRY_RUN_MATRIX.map((row) => row.site),
     ...YES_MATRIX.map((row) => row.site),
+    AGENT_SESSIONS_JSON.site,
+    DOCTOR_JSON.site,
   ]);
 }
 
@@ -207,12 +249,25 @@ async function loadAllCommands(): Promise<Command[]> {
   return commands;
 }
 
+/** The command object that owns each in-project JSON row. `config verify` runs through its `verify` subcommand. */
+const IN_PROCESS_TARGETS: Record<string, { command: Command; args: string[] }> = {
+  stacks: { command: stacksCommand, args: [] },
+  resources: { command: resourcesCommand, args: [] },
+  projects: { command: projectsCommand, args: [] },
+  status: { command: statusCommand, args: [] },
+  networks: { command: networksCommand, args: [] },
+  "config verify": { command: configCommand, args: ["verify"] },
+};
+
 describe("flag contract: --json", () => {
   it.each(JSON_MATRIX)(
     "tdk $command --json prints one envelope in a project",
-    ({ command, project }) => {
+    async ({ command, project }) => {
+      // In-project rows run the command object in-process: the envelope is printed by the command itself, so the
+      // child process adds no coverage here. Outside-project rows stay spawns, because they exercise the top-level handler.
       const root = createTempProject(project);
-      const result = runTdk([...command, "--json"], { cwd: root });
+      const target = IN_PROCESS_TARGETS[command.join(" ")];
+      const result = await runCommandInProcess(target.command, [...target.args, "--json"], root);
       expect(result.stderr).not.toMatch(/^\{/m);
       const envelope = parseOneEnvelope(result.stdout);
       expect(envelope.schemaVersion).toBe(1);
@@ -232,6 +287,32 @@ describe("flag contract: --json", () => {
       expect(envelope.errors).toHaveLength(1);
     },
   );
+});
+
+describe("flag contract: --json for doctor", () => {
+  it(`${DOCTOR_JSON.site} prints one envelope with no project`, () => {
+    const result = runTdk([...DOCTOR_JSON.command, "--json"], {
+      cwd: createTempDir(),
+      timeout: 60_000,
+    });
+    expect(result.stderr).not.toMatch(/^\{/m);
+    const envelope = parseOneEnvelope(result.stdout);
+    expect(envelope.schemaVersion).toBe(1);
+    expect(Array.isArray(envelope.errors)).toBe(true);
+  }, 60_000);
+});
+
+describe("flag contract: --json error envelope for agent sessions", () => {
+  it(`${AGENT_SESSIONS_JSON.site} without --session-id fails with a null-data envelope`, () => {
+    const root = createTempProject(AGENT_SESSIONS_JSON.project);
+    const result = runTdk([...AGENT_SESSIONS_JSON.command, "--json"], { cwd: root });
+    expect(result.status).toBe(1);
+    expect(result.stderr).not.toMatch(/^\{/m);
+    const envelope = parseOneEnvelope(result.stdout);
+    expect(envelope.schemaVersion).toBe(1);
+    expect(envelope.data).toBeNull();
+    expect(envelope.errors).toEqual([expect.objectContaining({ code: "SESSION_ID_REQUIRED" })]);
+  });
 });
 
 describe("flag contract: completeness", () => {
@@ -262,14 +343,25 @@ describe("flag contract: completeness", () => {
   });
 });
 
+/** The command object and arguments that each dry-run row runs in-process, without `--dry-run` (added below). */
+const DRY_RUN_TARGETS: Record<string, { command: Command; args: string[] }> = {
+  "config regenerate": { command: configCommand, args: ["regenerate"] },
+  down: { command: downCommand, args: [] },
+  eject: { command: ejectCommand, args: [] },
+  up: { command: upCommand, args: [] },
+};
+
 describe("flag contract: --dry-run", () => {
   it.each(DRY_RUN_MATRIX)(
     "tdk $site prints its plan and writes nothing",
-    ({ command, project, expect: line }) => {
+    async ({ command, project, expect: line }) => {
       const root = createTempProject(project);
       const before = snapshotTree(root);
-      const result = runTdk([...command, "--dry-run"], { cwd: root, input: "", timeout: 60_000 });
-      expect(result.status).toBe(0);
+      // The plan is printed by the command itself, so the row runs in-process. Each row is one command object,
+      // so Commander's kept option values cannot leak between rows.
+      const target = DRY_RUN_TARGETS[command.join(" ")];
+      const result = await runCommandInProcess(target.command, [...target.args, "--dry-run"], root);
+      expect(result.status ?? 0).toBe(0);
       expect(result.stdout).toContain(line);
       expect(snapshotTree(root)).toEqual(before);
     },
