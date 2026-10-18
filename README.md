@@ -1,4 +1,4 @@
-# TDK CLI — start services on your machine
+# TDK CLI — generate and run your whole tech stack without the setup pain
 
 Go from an empty folder to a running tech stack with one command. Built for agents.
 
