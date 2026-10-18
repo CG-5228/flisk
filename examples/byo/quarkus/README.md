@@ -1,5 +1,7 @@
 # quarkus
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** a real Quarkus project from the Quarkus generator ([code.quarkus.io](https://code.quarkus.io); Maven, Java, REST and
 SmallRye Health, no database)
 

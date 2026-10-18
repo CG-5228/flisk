@@ -1,5 +1,7 @@
 # .tilt-engine/
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 > **Contributing to the current engine:** follow the [engine and discovery recipe](../docs/contributing/02-feature-recipes.md#change-the-engine-or-service-discovery). This README contains older architecture notes; check paths against the current `engine/topologies/` source before relying on them.
 
 **Tilt Platform Framework Code**

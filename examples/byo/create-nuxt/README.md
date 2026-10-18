@@ -1,5 +1,7 @@
 # create-nuxt
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** a real `nuxi init` project (Nuxt minimal template, whatever `nuxi@latest` ships)
 
 **Notes:** scaffolder runs at build time (`--template minimal --no-install --gitInit=false`); `nuxt dev --host 0.0.0.0`

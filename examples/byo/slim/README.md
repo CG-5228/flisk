@@ -1,5 +1,7 @@
 # slim
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** a real Slim 4 skeleton from `composer create-project slim/slim-skeleton` (PHP 8.4, no external database)
 
 **Notes:**

@@ -1,5 +1,7 @@
 # create-mastra
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** a real `create-mastra` project (empty template)
 
 **Notes:** scaffolder runs at build time; `mastra dev` reads `PORT` and is reachable beyond loopback.

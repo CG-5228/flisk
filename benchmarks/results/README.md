@@ -1,5 +1,7 @@
 # Benchmark results
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 Measured results committed to the repository. Each file or folder is one published run; the machine and tool versions are recorded inside it.
 
 | Result | What it measures | Where to read it |

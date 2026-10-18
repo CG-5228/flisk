@@ -1,5 +1,7 @@
 # mikro-orm
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** [MikroORM](https://mikro-orm.io) 6, `mikro-orm migration:up` applying plain-JavaScript migrations to TDK's Postgres,
 then exit.
 

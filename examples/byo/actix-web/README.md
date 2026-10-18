@@ -1,5 +1,7 @@
 # actix-web
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** a minimal hand-written Actix Web 4 app (Rust, `cargo build --release`). Actix has no project generator, so the app is
 the files next to the Dockerfile. TDK's native Rust provider uses axum; this is the Actix route.
 

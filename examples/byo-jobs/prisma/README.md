@@ -1,5 +1,7 @@
 # prisma
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** [Prisma](https://www.prisma.io) 6, `prisma migrate deploy` applying `prisma/migrations` to TDK's Postgres, then exit.
 
 **Notes:**

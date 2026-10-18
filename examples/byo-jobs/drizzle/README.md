@@ -1,5 +1,7 @@
 # drizzle
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** [Drizzle](https://orm.drizzle.team) (`drizzle-orm` 0.44, `drizzle-kit` 0.31), `drizzle-kit migrate` applying
 the generated SQL migrations to TDK's Postgres, then exit.
 

@@ -1,5 +1,7 @@
 # turso-app
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** a small Node 22 service (`node:22-slim`) that talks to Turso's server with [`@libsql/client`](https://www.npmjs.com/package/@libsql/client) over HTTP
 
 **Notes:**

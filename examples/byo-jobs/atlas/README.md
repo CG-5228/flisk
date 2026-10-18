@@ -1,5 +1,7 @@
 # atlas
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** [Atlas](https://atlasgo.io) declarative schema apply (`atlas schema apply`) from `schema.hcl` to TDK's Postgres,
 then exit.
 

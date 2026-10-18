@@ -1,5 +1,7 @@
 # One backend on your machine
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 This example is one authored `service.json` and one small Hono service. TDK creates the local orchestration files; Docker builds the service and Tilt runs it with hot reload. No Kubernetes cluster is needed.
 
 ## Prerequisites

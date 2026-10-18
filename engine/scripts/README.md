@@ -7,6 +7,8 @@ updated: 2026-03-31
 
 # Tilt Library Build Caching
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 ## Overview
 
 These scripts implement intelligent caching for library builds to avoid unnecessary rebuilds and republishes during `tilt up`.

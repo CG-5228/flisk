@@ -1,5 +1,7 @@
 # Your first TDK contribution
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 Translations: [日本語](translations/README-ja.md) · [简体中文](translations/README-zh_cn.md) · [繁體中文](translations/README-zh_tw.md) · [한국어](translations/README-ko.md) · [Türkçe](translations/README-tr.md)
 
 You do not need to understand the whole repository. Pick one small change, follow the matching recipe, and ask questions in the issue if a step is unclear.

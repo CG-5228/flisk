@@ -1,5 +1,7 @@
 # sinatra
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** a minimal Sinatra 4 app (Ruby 3.4, Puma), three files: `app.rb`, `Gemfile` and the Dockerfile
 
 **Notes:**

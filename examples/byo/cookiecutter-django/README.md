@@ -1,5 +1,7 @@
 # cookiecutter-django
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** a real [cookiecutter-django](https://github.com/cookiecutter/cookiecutter-django) project (Django, no Docker, no
 Celery, no mail catcher, no frontend pipeline), generated at build time and run with TDK's `DATABASE_URL`.
 

@@ -1,5 +1,7 @@
 # rsbuild
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** a real `create-rsbuild` app
 
 **Notes:** scaffolder runs at build time; `rsbuild dev --host 0.0.0.0`. Full guide: [docs/recipes/rsbuild.md](../../../docs/recipes/rsbuild.md)

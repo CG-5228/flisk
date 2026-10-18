@@ -1,5 +1,7 @@
 # typeorm
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** [TypeORM](https://typeorm.io) 0.3, `typeorm migration:run` applying plain-JavaScript migrations to TDK's Postgres,
 then exit.
 

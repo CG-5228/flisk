@@ -1,5 +1,7 @@
 # create-analog
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** a real `create-analog` app (Angular)
 
 **Notes:** scaffolder runs at build time; upgrades npm to 11 because the template's `$vite`/`$vitest` overrides fail on npm 10; Vite `--host 0.0.0.0`

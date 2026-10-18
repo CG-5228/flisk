@@ -1,5 +1,7 @@
 # TDK product example
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 A small working landscape with a Hono API, PostgreSQL, a NATS worker, a Vite UI, and Traefik routes.
 
 This is a local demo, not a Helm chart.

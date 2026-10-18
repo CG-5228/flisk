@@ -1,5 +1,7 @@
 # full-stack-fastapi-template
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** the real [fastapi/full-stack-fastapi-template](https://github.com/fastapi/full-stack-fastapi-template) backend
 (FastAPI, SQLModel, Alembic, Postgres), cloned at build time and run with TDK's `DATABASE_URL`. API only: the template's
 React frontend is not built.

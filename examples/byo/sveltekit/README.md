@@ -1,5 +1,7 @@
 # sveltekit
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** a real SvelteKit app (`sv create`, minimal template, TypeScript, no add-ons)
 
 **Notes:** scaffolder runs at build time with `--template minimal --types ts --no-add-ons --no-install`; `vite dev

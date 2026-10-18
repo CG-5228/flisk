@@ -1,5 +1,7 @@
 # create-react-router
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 **Stack:** a real `create-react-router` project (default template, framework mode, Vite)
 
 **Notes:** scaffolder runs at build time with `--yes --no-install --no-git-init --no-agent-skills`;

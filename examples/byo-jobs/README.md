@@ -1,5 +1,7 @@
 # Bring-your-own one-shot jobs
 
+[![Test coverage](https://raw.githubusercontent.com/tdk-landscape/tdk-cli-core/main/docs/assets/coverage.svg)](https://github.com/tdk-landscape/tdk-cli-core/blob/main/docs/assets/coverage.svg)
+
 Each folder is a job that runs once and exits `0`, such as a database migration, packaged as a bring-your-own
 resource with `"restart": "no"` (see [docs/byo.md](../../docs/byo.md#one-shot-jobs-migrations-seeders)). Unlike
 [`examples/byo/`](../byo/README.md), they do not serve HTTP, so they are checked with a real `tdk up`:
