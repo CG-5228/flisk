@@ -1,24 +1,42 @@
 {
-  "name": "release branch protections",
-  "target": "branch",
-  "enforcement": "active",
-  "branches": ["refs/heads/release/*", "refs/heads/releases/**/*"],
-  "bypass_actors": [],
-  "rules": {
-    "prevent_deletion": true,
-    "block_force_pushes": true,
-    "require_pull_request": true,
-    "required_approvals": 1,
-    "dismiss_stale_approvals": true,
-    "require_code_owner_review": true,
-    "require_latest_push_approval": true,
-    "require_conversation_resolution": true,
-    "require_up_to_date_branch": true,
-    "required_status_checks": [
-      "example-e2e",
-      "windows-smoke",
-      "🧐 PR summary review"
-    ],
-    "require_merge_queue": false
-  }
+	"name": "release branch protections",
+	"target": "branch",
+	"enforcement": "active",
+	"bypass_actors": [],
+	"conditions": {
+		"ref_name": {
+			"exclude": [],
+			"include": ["refs/heads/release/*", "refs/heads/releases/**/*"]
+		}
+	},
+	"rules": [
+		{ "type": "deletion" },
+		{ "type": "non_fast_forward" },
+		{
+			"type": "pull_request",
+			"parameters": {
+				"required_approving_review_count": 1,
+				"dismiss_stale_reviews_on_push": true,
+				"required_reviewers": [],
+				"require_code_owner_review": true,
+				"dismissal_restriction": { "enabled": false, "allowed_actors": [] },
+				"require_last_push_approval": true,
+				"required_review_thread_resolution": true,
+				"require_extra_approval_for_unattributed_changes": true,
+				"allowed_merge_methods": ["merge", "squash", "rebase"]
+			}
+		},
+		{
+			"type": "required_status_checks",
+			"parameters": {
+				"strict_required_status_checks_policy": true,
+				"do_not_enforce_on_create": false,
+				"required_status_checks": [
+					{ "context": "example-e2e" },
+					{ "context": "windows-smoke" },
+					{ "context": "🧐 PR summary review" }
+				]
+			}
+		}
+	]
 }

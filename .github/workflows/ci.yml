@@ -456,43 +456,12 @@ jobs:
     permissions:
       contents: read
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Check summary and verification notes
-        env:
-          GITHUB_EVENT_PATH: ${{ github.event_path }}
         run: |
-          node <<'NODE'
-          const fs = require('node:fs');
-          const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
-          const body = event.pull_request?.body ?? '';
-          const section = (heading) => {
-            const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const headingPattern = new RegExp(`^##\\s+${escaped}\\s*$`, 'i');
-            const lines = body.split(/\r?\n/);
-            const start = lines.findIndex((line) => headingPattern.test(line));
-            if (start < 0) return '';
-            const nextHeading = lines.findIndex((line, index) => index > start && /^##\s+/.test(line));
-            return lines.slice(start + 1, nextHeading < 0 ? lines.length : nextHeading)
-              .join('\n')
-              .replace(/<!--[\s\S]*?-->/g, '')
-              .trim();
-          };
-          const summary = section('What changed?');
-          const verification = section('How did you check it?');
-          const issues = [];
-          if (!summary) issues.push('Add a plain-language summary under **What changed?**.');
-          if (!/^- \[x\]/im.test(verification) && !/^[-*] Other check:\s*\S/im.test(verification)) {
-            issues.push('Mark a completed check under **How did you check it?**, or fill in **Other check**.');
-          }
-          const lines = issues.length
-            ? ['## PR summary review: changes needed', '', ...issues.map((issue) => `- ${issue}`), '', 'This automated check validates PR completeness; it does not approve code. A human approval is still required.']
-            : ['## PR summary review: passed', '', 'A change summary and verification notes are present. Human code review is still required.'];
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.join('\n')}\n`);
-          if (issues.length) {
-            for (const issue of issues) console.error(`::error::${issue}`);
-            process.exit(1);
-          }
-          console.log('PR summary and verification notes are present.');
-          NODE
+          node scripts/check-pr-review-readiness.mjs
 
   summary:
     name: 📋 Summary

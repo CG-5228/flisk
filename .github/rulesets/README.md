@@ -1,10 +1,12 @@
 # Branch ruleset snapshots
 
-These JSON files are the checked-in record of the repository's active GitHub
-rulesets. Keep them in sync with **Settings → Rules → Rulesets** when repository
-protection changes. They intentionally describe settings rather than contain
-GitHub's API export format: GitHub does not apply them automatically, and the
-repository ruleset API requires an Administration write token.
+These JSON files are GitHub ruleset API request bodies and the checked-in record
+of the repository's active rulesets. Keep them in sync with **Settings → Rules →
+Rulesets** when protection changes. `scripts/check-ruleset-snapshots.mjs` compares
+the snapshots with the live API; the scheduled required-checks drift workflow
+reports differences in one issue. GitHub does not apply these files
+automatically, and the repository ruleset API requires an Administration write
+token.
 
 When adding a required check, merge the workflow that produces it first, then
 add that check to the live GitHub rulesets. This avoids requiring a status
