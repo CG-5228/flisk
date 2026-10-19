@@ -3,37 +3,27 @@
 from __future__ import annotations
 
 import csv
+import http.client
 import json
 import os
 import sys
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.error import HTTPError
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
 
-TOPICS = [
-    # TDK's current topics, plus a few language and tooling hypotheses to evaluate.
-    "bun", "cli", "developer-experience", "developer-tools",
-    "development-environment", "devops", "docker", "docker-compose",
-    "docker-compose-alternative", "hot-reload", "inner-loop",
-    "local-development", "microservices", "starlark", "tilt", "tiltfile",
-    "traefik", "typescript", "nix", "nim", "pony", "idris", "agda",
-    "prolog",
-]
-CURRENT_TOPICS = {
-    "bun", "cli", "developer-experience", "developer-tools", "development-environment",
-    "devops", "docker", "docker-compose", "docker-compose-alternative", "hacktoberfest",
-    "hacktoberfest2026", "hot-reload", "inner-loop", "local-development", "microservices",
-    "starlark", "tilt", "tiltfile", "traefik", "typescript",
+CANDIDATE_TOPICS = {"development-environment", "python", "nim", "pony", "agda"}
+LABEL_ADVICE = {
+    "development-environment": "Best next topic to add: it directly describes TDK's core product. Because all 20 topic slots are occupied, replace the time-bound hacktoberfest2026 topic after the 2026 campaign.",
+    "python": "Consider adding: TDK has a Python backend provider and a runnable Python example.",
+    "nim": "Do not add yet: no maintained Nim provider or example is present.",
+    "pony": "Do not add yet: no maintained Pony provider or example is present.",
+    "agda": "Do not add yet: no maintained Agda provider or example is present.",
 }
 
-API = "https://api.github.com/search/repositories"
-
-
-def count(token: str | None, topic: str, qualifier: str = "") -> int:
-    query = f"topic:{topic} {qualifier}".strip()
+def api_get(path: str, params: dict[str, str], token: str | None) -> dict:
+    """Call the fixed api.github.com host; only an encoded query path is dynamic."""
+    target = f"{path}?{urlencode(params)}"
     for _attempt in range(5):
         headers = {
             "Accept": "application/vnd.github+json",
@@ -42,21 +32,33 @@ def count(token: str | None, topic: str, qualifier: str = "") -> int:
         }
         if token:
             headers["Authorization"] = f"Bearer {token}"
-        url = f"{API}?{urlencode({'q': query, 'per_page': 1})}"
-        request = Request(url, headers=headers)
+        connection = http.client.HTTPSConnection("api.github.com", timeout=30)
         try:
-            with urlopen(request, timeout=30) as response:
-                return int(json.load(response).get("total_count", 0))
-        except HTTPError as error:
-            if error.code == 403 and error.headers.get("X-RateLimit-Remaining") == "0":
-                reset = int(error.headers.get("X-RateLimit-Reset", time.time() + 60))
+            connection.request("GET", target, headers=headers)
+            response = connection.getresponse()
+            body = response.read()
+            if response.status == 403 and response.getheader("X-RateLimit-Remaining") == "0":
+                reset = int(response.getheader("X-RateLimit-Reset", time.time() + 60))
                 time.sleep(max(1, min(reset - int(time.time()) + 1, 90)))
                 continue
-            if error.code == 422:  # GitHub search can reject malformed/unsupported queries
-                print(f"Skipping unsupported query: {query}", file=sys.stderr)
-                return 0
-            raise
-    raise RuntimeError(f"GitHub rate limit persisted for query: {query}")
+            if response.status == 422:
+                print(f"Skipping unsupported GitHub query: {params.get('q', path)}", file=sys.stderr)
+                return {}
+            if response.status >= 400:
+                raise RuntimeError(f"GitHub API returned HTTP {response.status}: {body.decode('utf-8', errors='replace')}")
+            return json.loads(body)
+        finally:
+            connection.close()
+    raise RuntimeError(f"GitHub rate limit persisted for request: {target}")
+
+
+def count(token: str | None, topic: str, qualifier: str = "") -> int:
+    query = f"topic:{topic} {qualifier}".strip()
+    return int(api_get("/search/repositories", {"q": query, "per_page": "1"}, token).get("total_count", 0))
+
+
+def current_topics(token: str | None) -> set[str]:
+    return set(api_get("/repos/tdk-landscape/tdk-cli-core/topics", {}, token).get("names", []))
 
 
 def main() -> None:
@@ -65,9 +67,11 @@ def main() -> None:
     active_since = now - timedelta(days=30)
     previous_recent_since = recent_since - timedelta(days=90)
     token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
+    assigned_topics = current_topics(token)
+    topics = sorted(assigned_topics | CANDIDATE_TOPICS)
 
     rows = []
-    for topic in TOPICS:
+    for topic in topics:
         total = count(token, topic)
         recent = count(token, topic, f"created:>={recent_since.isoformat()}")
         previous = count(token, topic, f"created:{previous_recent_since.isoformat()}..{(recent_since - timedelta(days=1)).isoformat()}")
@@ -78,7 +82,7 @@ def main() -> None:
         trend_score = round((growth / 100) * volume_factor * activity_factor, 3)
         rows.append({
             "topic": topic,
-            "current_repo_topic": topic in CURRENT_TOPICS,
+            "current_repo_topic": topic in assigned_topics,
             "total_repos": total,
             "new_repos_last_90d": recent,
             "new_repos_previous_90d": previous,
@@ -102,7 +106,14 @@ def main() -> None:
     top = rows[:10]
     with (out / "github-topic-trends.md").open("w", encoding="utf-8") as file:
         file.write(f"# GitHub topic trends — {now.isoformat()}\n\n")
-        file.write("Counts come from GitHub repository search. Growth compares newly created matching repositories in the latest 90 days with the prior 90 days. Activity means pushed in the last 30 days. Trend score is growth multiplied by a volume factor (capped at 100 new repositories) and an activity factor (active repositories relative to new repositories), to reduce small-sample spikes. Topics already assigned to TDK are marked. Experimental language topics are included for comparison only; a trend signal does not prove product fit or justify adding a tag without maintained support. The workflow never changes repository metadata.\n\n")
+        file.write("Counts come from GitHub repository search. Growth compares newly created matching repositories in the latest 90 days with the prior 90 days. Activity means pushed in the last 30 days. Trend score is growth multiplied by a volume factor (capped at 100 new repositories) and an activity factor (active repositories relative to new repositories), to reduce small-sample spikes. The workflow fetches TDK's current topic labels each run and marks them in the CSV. Experimental language topics are comparison only; trends do not establish product fit.\n\n")
+        file.write(f"## Label recommendation\n\nTDK currently has {len(assigned_topics)} of GitHub's 20 available topic slots.\n\n")
+        for topic, advice in LABEL_ADVICE.items():
+            state = "already assigned" if topic in assigned_topics else "not assigned"
+            row = next((item for item in rows if item["topic"] == topic), None)
+            trend = f" Latest 90-day growth: {row['new_repo_growth_pct']:.1f}% ({row['new_repos_last_90d']} new; {row['active_repos_last_30d']} active in 30 days)." if row else ""
+            file.write(f"- `{topic}` ({state}): {advice}{trend}\n")
+        file.write("The report never changes repository metadata.\n\n")
         file.write("| Topic | On TDK | Total repos | New (90d) | Prior 90d | Growth | Active (30d) | Score |\n|---|:---:|---:|---:|---:|---:|---:|---:|\n")
         for row in top:
             current = "yes" if row["current_repo_topic"] else "no"
