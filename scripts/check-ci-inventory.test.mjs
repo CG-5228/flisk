@@ -113,6 +113,10 @@ test("a required ruleset check is validated independently of classic branch prot
 		checkRequiredContexts({ inventory, jobs, contexts: [], source: "ruleset 'main merge queue'" })[0],
 		/not in ruleset 'main merge queue'/,
 	);
+	assert.deepEqual(
+		checkRequiredContexts({ inventory, jobs, contexts: [], source: "ruleset 'main merge queue'", exact: false }),
+		[],
+	);
 });
 
 test("a job without timeout-minutes fails, a reusable-workflow caller does not", () => {

@@ -32,8 +32,8 @@
 				"strict_required_status_checks_policy": true,
 				"do_not_enforce_on_create": false,
 				"required_status_checks": [
-					{ "context": "example-e2e" },
-					{ "context": "windows-smoke" },
+					{ "context": "e2e-examples" },
+					{ "context": "e2e-platforms" },
 					{ "context": "🧐 PR summary review" }
 				]
 			}

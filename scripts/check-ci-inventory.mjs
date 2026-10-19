@@ -86,7 +86,8 @@ export function loadSnapshot(file) {
 	return snapshot.contexts;
 }
 
-export function checkRequiredContexts({ inventory, jobs, contexts, source }) {
+// exact: every required job must be in contexts and every context must be a required job. A ruleset may require a subset, so it passes exact: false.
+export function checkRequiredContexts({ inventory, jobs, contexts, source, exact = true }) {
 	const problems = [];
 	const entries = Array.isArray(inventory?.jobs) ? inventory.jobs : [];
 	const jobsByKey = new Map(jobs.map((j) => [`${j.workflow}:${j.job}`, j]));
@@ -95,7 +96,7 @@ export function checkRequiredContexts({ inventory, jobs, contexts, source }) {
 			.filter((entry) => entry.required === true && jobsByKey.has(`${entry.workflow}:${entry.job}`))
 			.map((entry) => jobsByKey.get(`${entry.workflow}:${entry.job}`).checkName),
 	);
-	for (const name of requiredNames) {
+	for (const name of exact ? requiredNames : []) {
 		if (!contexts.includes(name)) {
 			problems.push(`required check "${name}" is in the inventory but not in ${source}`);
 		}
@@ -222,6 +223,12 @@ export function checkInventory({ inventory, jobs, contexts }) {
 	return problems;
 }
 
+export function contextsOf(ruleset) {
+	return [...new Set(ruleset.rules
+		.filter((rule) => rule.type === "required_status_checks")
+		.flatMap((rule) => rule.parameters.required_status_checks.map((check) => check.context)))].sort();
+}
+
 export function fetchLiveRulesetContexts(repo, rulesetName) {
 	const summaries = JSON.parse(
 		execFileSync("gh", ["api", `repos/${repo}/rulesets?per_page=100`], { encoding: "utf8" }),
@@ -231,9 +238,7 @@ export function fetchLiveRulesetContexts(repo, rulesetName) {
 	const ruleset = JSON.parse(
 		execFileSync("gh", ["api", `repos/${repo}/rulesets/${summary.id}`], { encoding: "utf8" }),
 	);
-	return [...new Set(ruleset.rules
-		.filter((rule) => rule.type === "required_status_checks")
-		.flatMap((rule) => rule.parameters.required_status_checks.map((check) => check.context)))].sort();
+	return contextsOf(ruleset);
 }
 
 function main(argv) {
@@ -281,6 +286,18 @@ function main(argv) {
 		return 1;
 	}
 	const problems = checkInventory({ inventory, jobs, contexts });
+	if (args.mode === "snapshot") {
+		const snapshot = JSON.parse(readFileSync(path.join(args.root, ".github", "rulesets", "main.json"), "utf8"));
+		problems.push(
+			...checkRequiredContexts({
+				inventory,
+				jobs,
+				contexts: contextsOf(snapshot),
+				source: "ruleset snapshot main.json",
+				exact: false,
+			}),
+		);
+	}
 	if (args.mode === "live") {
 		try {
 			problems.push(
@@ -289,6 +306,7 @@ function main(argv) {
 					jobs,
 					contexts: fetchLiveRulesetContexts(repo, "main merge queue"),
 					source: "ruleset 'main merge queue'",
+					exact: false,
 				}),
 			);
 		} catch (error) {
