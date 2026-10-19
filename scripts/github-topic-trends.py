@@ -52,7 +52,7 @@ HISTORY_FIELDS = [
 def api_get(path: str, params: dict[str, str], token: str | None) -> dict:
     """Call the fixed api.github.com host; only an encoded query path is dynamic."""
     target = f"{path}?{urlencode(params)}"
-    for _attempt in range(5):
+    for attempt in range(5):
         headers = {
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
@@ -65,19 +65,37 @@ def api_get(path: str, params: dict[str, str], token: str | None) -> dict:
             connection.request("GET", target, headers=headers)
             response = connection.getresponse()
             body = response.read()
-            if response.status == 403 and response.getheader("X-RateLimit-Remaining") == "0":
-                reset = int(response.getheader("X-RateLimit-Reset", time.time() + 60))
-                time.sleep(max(1, min(reset - int(time.time()) + 1, 90)))
+            body_text = body.decode("utf-8", errors="replace")
+            remaining = response.getheader("X-RateLimit-Remaining")
+            is_rate_limited = response.status == 429 or (
+                response.status == 403 and (remaining == "0" or "rate limit" in body_text.lower())
+            )
+            if is_rate_limited:
+                retry_after = response.getheader("Retry-After")
+                reset = response.getheader("X-RateLimit-Reset")
+                if retry_after:
+                    delay = max(1, int(retry_after))
+                elif reset:
+                    delay = max(1, min(int(reset) - int(time.time()) + 1, 90))
+                else:
+                    delay = min(60, 5 * (2 ** attempt))
+                time.sleep(delay)
                 continue
             if response.status == 422:
-                print(f"Skipping unsupported GitHub query: {params.get('q', path)}", file=sys.stderr)
-                return {}
+                raise RuntimeError(f"GitHub rejected query {params.get('q', path)!r}: {body_text}")
             if response.status >= 400:
-                raise RuntimeError(f"GitHub API returned HTTP {response.status}: {body.decode('utf-8', errors='replace')}")
-            return json.loads(body)
+                raise RuntimeError(f"GitHub API returned HTTP {response.status}: {body_text}")
+            payload = json.loads(body)
+            if path == "/search/repositories" and payload.get("incomplete_results"):
+                if attempt < 4:
+                    print(f"Retrying incomplete GitHub search: {params.get('q', path)}", file=sys.stderr)
+                    time.sleep(min(2 ** attempt, 15))
+                    continue
+                raise RuntimeError(f"GitHub returned incomplete search results for {params.get('q', path)!r}")
+            return payload
         finally:
             connection.close()
-    raise RuntimeError(f"GitHub rate limit persisted for request: {target}")
+    raise RuntimeError(f"Rate limiting or incomplete results persisted for request: {target}")
 
 
 def count(token: str | None, topic: str, qualifier: str = "") -> int:
@@ -183,7 +201,7 @@ def main() -> None:
         file.write(f"# GitHub topic discovery report — {today.isoformat()}\n\n")
         file.write(f"This scans {len(TRACKED_TOPICS)} TDK-relevant topics with {api_gets_per_run} GitHub API calls. GitHub repository counts are discovery proxies; they do not show that a topic label increases traffic.\n\n")
         file.write("## How to read the signals\n\n")
-        file.write("- **Acceleration** compares repositories created in the latest 30 days with the preceding 30 days.\n- **90-day baseline** compares the latest 90 days with the prior 90 days.\n- **Absolute demand** is the total repositories and new repositories in the 90-day window.\n- **Confidence** is based on the 90-day new-repository sample: high ≥100, medium ≥25, low <25; samples under 10 are classified too small/noisy.\n- **Historical snapshots** are appended weekly in `github-topic-history.csv`, Weekly rolling-window change compares this report's 30-day new-repository count with the prior saved snapshot, exposing whether momentum is rising or falling.\n\n")
+        file.write("- **Acceleration** compares repositories created in the latest 30 days with the preceding 30 days.\n- **90-day baseline** compares the latest 90 days with the prior 90 days.\n- **Absolute demand** is the total repositories and new repositories in the 90-day window.\n- **Confidence** is based on the 90-day new-repository sample: high ≥100, medium ≥25, low <25; samples under 10 are classified too small/noisy.\n- **Historical snapshots** are appended weekly in `github-topic-history.csv`; weekly rolling-window change compares this report's 30-day new-repository count with the prior saved snapshot to show whether momentum is rising or falling.\n\n")
         file.write("Trend labels are evidence summaries, not predictions. ‘Emerging’ requires positive acceleration and a positive 90-day baseline; ‘Trending now’ adds substantial total and recent demand; large, slowing topics are marked established.\n\n")
         file.write(f"## Add-label recommendations\n\nTDK currently uses {len(current_topics)} of GitHub's 20 topic slots. Only absent topics that accurately describe TDK are considered.\n\n")
         for topic in ("development-environment", "python"):
@@ -191,7 +209,15 @@ def main() -> None:
             state = "already assigned" if topic in current_topics else "not assigned"
             reason = FIT_REASON[topic]
             file.write(f"- **`{topic}` ({state}; {TOPIC_FIT[topic]} fit):** {reason}. Evidence: {row['classification']}; {row['new_last_30d']} vs {row['new_previous_30d']} newly created repositories in the latest/prior 30 days ({row['acceleration_pct']:+.1f}%); 90-day change {row['growth_90d_pct']:+.1f}% ({row['new_last_90d']} new repositories); {row['active_last_30d']} pushed in 30 days; {row['confidence']} confidence.\n")
-        file.write("\nTDK is at the 20-topic limit, so the recommended next change is to replace `hacktoberfest2026` with `development-environment` after that campaign ends, if the accelerating and baseline signals remain positive. `python` is a second, capability-backed candidate. Do not add rare-language tags based on rarity alone.\n\n")
+        if "development-environment" in current_topics:
+            slot_advice = "Keep `development-environment`; it is already assigned."
+        elif len(current_topics) < 20:
+            slot_advice = "There is room to add `development-environment` while the trend signals remain positive."
+        elif "hacktoberfest2026" in current_topics:
+            slot_advice = "At the 20-topic limit, replace `hacktoberfest2026` with `development-environment` after that campaign, if the trend signals remain positive."
+        else:
+            slot_advice = "All 20 slots are occupied; consider `development-environment` only after choosing a less relevant topic to replace."
+        file.write(f"\n{slot_advice} `python` is a second, capability-backed candidate if not already assigned. Do not add rare-language tags based on rarity alone.\n\n")
         file.write("This is a relevance and momentum recommendation, not a claim that a tag causes traffic growth. Validate impact with repository traffic before/after a relevant change.\n\n")
         file.write("| Topic | Fit | On TDK | Classification | Total | New 30d | Prior 30d | Acceleration | Weekly 30d change | New 90d | Prior 90d | 90d change | Active 30d | Confidence |\n|---|---|:---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|\n")
         for row in rows:
