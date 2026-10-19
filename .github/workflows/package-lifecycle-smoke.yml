@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 2
     if: github.event_name == 'pull_request'
     permissions:
@@ -33,7 +33,7 @@ jobs:
 
   lifecycle-smoke:
     name: 📦 Packed CLI lifecycle smoke
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     needs: docs
     # Skip on docs-only PRs; a skipped job still satisfies required checks.

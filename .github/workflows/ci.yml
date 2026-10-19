@@ -19,7 +19,7 @@ jobs:
   # The only change-detection job in this run. Every other job reads its outputs.
   changes:
     name: 🔎 Detect Changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 2 # every job finishes in under 20s; fail fast if one hangs
     permissions:
       contents: read
@@ -69,7 +69,7 @@ jobs:
 
   spellcheck:
     name: 🔤 Spell check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 1
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -79,7 +79,7 @@ jobs:
 
   lint:
     name: 🛡️ Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: changes
     # Skip on docs-only PRs; a skipped job still satisfies required checks.
     if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
@@ -132,7 +132,7 @@ jobs:
 
   typecheck:
     name: 🦴 Typecheck
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: changes
     # Skip on docs-only PRs; a skipped job still satisfies required checks.
     if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
@@ -154,7 +154,7 @@ jobs:
 
   fuzz:
     name: 🧬 Fuzz
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: changes
     # Skip on docs-only PRs; a skipped job still satisfies required checks.
     if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
@@ -172,7 +172,7 @@ jobs:
 
   published-schema:
     name: 📜 Published service schema
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: changes
     # Skip on docs-only PRs; a skipped job still satisfies required checks.
     if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
@@ -186,7 +186,7 @@ jobs:
 
   test:
     name: 🧪 Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: changes
     # Skip on docs-only PRs; a skipped job still satisfies required checks.
     if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
@@ -265,7 +265,7 @@ jobs:
   # Test job uploads. A fork's token is read-only, so a fork PR gets the job summary and no comment.
   pr-summary:
     name: 📝 PR test summary
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [changes, test]
     if: ${{ !cancelled() && github.event_name == 'pull_request' && needs.changes.outputs.docs_only != 'true' }}
     timeout-minutes: 3
@@ -309,7 +309,7 @@ jobs:
   # Builds and packs the CLI once per run. package-smoke installs this tarball instead of packing its own.
   package:
     name: 📦 Pack CLI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: changes
     # Skip on docs-only PRs; a skipped job still satisfies required checks.
     if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
@@ -352,7 +352,7 @@ jobs:
   # so a release can't ship without the compiled CLI or its dependencies.
   package-smoke:
     name: 📦 Package Smoke Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [changes, package]
     # Skip on docs-only PRs; a skipped job still satisfies required checks. When package failed, this job still runs
     # and the download below fails it, instead of skipping it.
@@ -397,7 +397,7 @@ jobs:
 
   secret-scan:
     name: 🔑 Secret Scan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 1 # every job finishes in under 20s; fail fast if one hangs
     if: github.event_name == 'pull_request'
     steps:
@@ -415,7 +415,7 @@ jobs:
   # repository variable DEPENDENCY_REVIEW set to true (Settings > Variables).
   dependency-review:
     name: 🔒 Dependency Audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 1 # every job finishes in under 20s; fail fast if one hangs
     needs: changes
     if: vars.DEPENDENCY_REVIEW == 'true' && needs.changes.outputs.lockfile == 'true' && github.event_name == 'pull_request'
@@ -429,7 +429,7 @@ jobs:
 
   workflow-audit:
     name: 🛠️ Workflow Audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 1 # every job finishes in under 20s; fail fast if one hangs
     needs: changes
     if: needs.changes.outputs.workflows == 'true' || github.event_name == 'workflow_dispatch'
@@ -451,7 +451,7 @@ jobs:
   pr-summary-review:
     name: 🧐 PR summary review
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 2
     permissions:
       contents: read
@@ -465,7 +465,7 @@ jobs:
 
   summary:
     name: 📋 Summary
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Waits for the e2e gates, which may run for tens of minutes (the scale gate most of all). The wait is bounded by the step below.
     timeout-minutes: 35
     if: always()

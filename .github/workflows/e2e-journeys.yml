@@ -43,7 +43,7 @@ jobs:
   # check does not run on a pull request, so no PR code is ever given the secret.
   license:
     name: Check the licensed journey secret
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 2
     if: github.event_name != 'pull_request'
     permissions: {}
@@ -70,7 +70,7 @@ jobs:
     name: Choose the journeys to run
     needs: license
     if: ${{ always() && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -103,7 +103,7 @@ jobs:
     # always(): on a pull request the license job is skipped, and a job whose needs chain includes a skipped job is skipped too,
     # so the matrix never expanded there. The plan result and its run list decide instead.
     if: ${{ always() && needs.plan.result == 'success' && needs.plan.outputs.run != '' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 40
     strategy:
       fail-fast: false
@@ -203,7 +203,7 @@ jobs:
     name: e2e-journeys
     needs: [plan, journeys]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 2
     permissions: {}
     steps:
