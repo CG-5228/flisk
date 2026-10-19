@@ -8,7 +8,7 @@ This scans 15 TDK-relevant topics with 91 GitHub API calls. GitHub repository co
 - **90-day baseline** compares the latest 90 days with the prior 90 days.
 - **Absolute demand** is the total repositories and new repositories in the 90-day window.
 - **Confidence** is based on the 90-day new-repository sample: high ≥100, medium ≥25, low <25; samples under 10 are classified too small/noisy.
-- **Historical snapshots** are appended weekly in `github-topic-history.csv`, Weekly rolling-window change compares this report's 30-day new-repository count with the prior saved snapshot, exposing whether momentum is rising or falling.
+- **Historical snapshots** are appended weekly in `github-topic-history.csv`; the weekly rolling-window change compares this report's 30-day new-repository count with the prior saved snapshot, exposing whether momentum is rising or falling.
 
 Trend labels are evidence summaries, not predictions. ‘Emerging’ requires positive acceleration and a positive 90-day baseline; ‘Trending now’ adds substantial total and recent demand; large, slowing topics are marked established.
 
@@ -24,7 +24,7 @@ TDK is at the 20-topic limit, so the recommended next change is to replace `hack
 This is a relevance and momentum recommendation, not a claim that a tag causes traffic growth. Validate impact with repository traffic before/after a relevant change.
 
 | Topic | Fit | On TDK | Classification | Total | New 30d | Prior 30d | Acceleration | Weekly 30d change | New 90d | Prior 90d | 90d change | Active 30d | Confidence |
-|---|---|:---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+|---|---|:---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
 | cli | direct | no | Trending now | 151189 | 19697 | 10040 | +96.2% | first snapshot | 39484 | 25378 | +55.6% | 42878 | high |
 | developer-experience | direct | yes | Trending now | 1936 | 296 | 159 | +86.2% | first snapshot | 603 | 372 | +62.1% | 696 | high |
 | developer-tools | direct | yes | Trending now | 87320 | 16932 | 9723 | +74.1% | first snapshot | 36557 | 22290 | +64.0% | 36744 | high |
