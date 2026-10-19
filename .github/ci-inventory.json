@@ -195,6 +195,14 @@
 		},
 		{
 			"workflow": "ci.yml",
+			"job": "pr-summary-review",
+			"tier": "gate",
+			"required": true,
+			"reason": "Rejects PRs without a plain-language change summary and completed verification notes",
+			"owner": "maintainers"
+		},
+		{
+			"workflow": "ci.yml",
 			"job": "summary",
 			"tier": "gate",
 			"required": true,

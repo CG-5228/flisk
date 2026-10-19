@@ -1,0 +1,24 @@
+{
+  "name": "release branch protections",
+  "target": "branch",
+  "enforcement": "active",
+  "branches": ["refs/heads/release/*", "refs/heads/releases/**/*"],
+  "bypass_actors": [],
+  "rules": {
+    "prevent_deletion": true,
+    "block_force_pushes": true,
+    "require_pull_request": true,
+    "required_approvals": 1,
+    "dismiss_stale_approvals": true,
+    "require_code_owner_review": true,
+    "require_latest_push_approval": true,
+    "require_conversation_resolution": true,
+    "require_up_to_date_branch": true,
+    "required_status_checks": [
+      "example-e2e",
+      "windows-smoke",
+      "🧐 PR summary review"
+    ],
+    "require_merge_queue": false
+  }
+}
