@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -82,9 +83,30 @@ export function reviewReadiness(body) {
 	return { passed: issues.length === 0, issues };
 }
 
+// A merge queue entry's head ref names its pull request: refs/heads/gh-readonly-queue/main/pr-<number>-<sha>.
+export function pullRequestFromMergeGroup(headRef) {
+	const match = /\/pr-(\d+)-/.exec(headRef ?? "");
+	return match ? Number(match[1]) : null;
+}
+
+// The pull request body for this event. A merge queue run has no pull request in its payload, so it reads the PR named by the
+// queue ref. Fails closed: if the PR cannot be read, the check fails instead of passing.
+export function bodyForEvent(event, repo, token) {
+	if (event.pull_request) return event.pull_request.body ?? "";
+	if (event.merge_group) {
+		const number = pullRequestFromMergeGroup(event.merge_group.head_ref);
+		if (number === null) throw new Error("the merge queue ref does not name a pull request");
+		return execFileSync("gh", ["api", `repos/${repo}/pulls/${number}`, "--jq", ".body // \"\""], {
+			encoding: "utf8",
+			env: { ...process.env, GH_TOKEN: token },
+		});
+	}
+	throw new Error(`unsupported event: ${Object.keys(event).join(", ")}`);
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
 	const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"));
-	const result = reviewReadiness(event.pull_request?.body ?? "");
+	const result = reviewReadiness(bodyForEvent(event, process.env.GITHUB_REPOSITORY, process.env.GH_TOKEN));
 	const lines = result.passed
 		? [
 				"## PR summary review: passed",

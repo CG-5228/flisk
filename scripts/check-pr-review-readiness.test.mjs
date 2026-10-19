@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { reviewReadiness } from "./check-pr-review-readiness.mjs";
+import { pullRequestFromMergeGroup, reviewReadiness } from "./check-pr-review-readiness.mjs";
 
 const body = (summary, verification) =>
 	`## What changed?\n\n${summary}\n\n## How did you check it?\n\n${verification}\n`;
@@ -72,4 +72,13 @@ test("rejects a description with no verification section", () => {
 test("reads the first matching section when a heading is duplicated", () => {
 	const text = "## What changed?\n\nTODO\n\n## What changed?\n\nAdded a real check.\n\n## How did you check it?\n\n- [x] `npm test`\n";
 	assert.equal(reviewReadiness(text).passed, false);
+});
+
+test("accepts a completed item written with an asterisk list marker", () => {
+	assert.equal(reviewReadiness(body("Added a repository ruleset check.", "* [x] `npm test`")).passed, true);
+});
+
+test("reads the pull request number from a merge queue ref", () => {
+	assert.equal(pullRequestFromMergeGroup("refs/heads/gh-readonly-queue/main/pr-1694-abc123"), 1694);
+	assert.equal(pullRequestFromMergeGroup("refs/heads/main"), null);
 });

@@ -450,16 +450,22 @@ jobs:
   # on the head commit instead and fails when one is missing or failed. A skipped gate passes, as a skipped job does here.
   pr-summary-review:
     name: 🧐 PR summary review
-    if: github.event_name == 'pull_request'
+    # Also runs on merge queue entries: the queue is where the required check must still mean something. The merge queue reads the
+    # pull request named by its ref, so it checks the same description the pull request was checked with.
+    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     runs-on: ubuntu-26.04
     timeout-minutes: 2
     permissions:
       contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
       - name: Check summary and verification notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           node scripts/check-pr-review-readiness.mjs
 
