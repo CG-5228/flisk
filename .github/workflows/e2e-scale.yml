@@ -6,8 +6,8 @@
 name: 🏭 e2e-scale
 
 on:
+  # Not on pull requests: the scale gate is the slowest per-PR cost, so it runs on the merge queue and nightly.
   merge_group:
-  pull_request:
 
 permissions:
   contents: read

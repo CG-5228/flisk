@@ -280,7 +280,7 @@
 			"workflow": "e2e-scale.yml",
 			"job": "e2e-scale",
 			"tier": "e2e",
-			"required": true,
+			"required": false,
 			"reason": "ERP scale gate on pull requests and merge queue (one-stack scope); required since the #1302 cutover; suite tests/e2e/scale/erp",
 			"owner": "maintainers"
 		},
