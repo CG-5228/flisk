@@ -1,0 +1,16 @@
+snapshot_date,topic,current_repo_topic,total_repos,new_last_30d,new_previous_30d,new_last_90d,new_previous_90d,active_last_30d,acceleration_pct,growth_90d_pct,weekly_rolling_30d_change_pct,confidence,classification
+2026-10-19,cli,False,151189,19697,10040,39484,25378,42878,96.2,55.6,,high,Trending now
+2026-10-19,developer-experience,True,1936,296,159,603,372,696,86.2,62.1,,high,Trending now
+2026-10-19,developer-tools,True,87320,16932,9723,36557,22290,36744,74.1,64.0,,high,Trending now
+2026-10-19,development-environment,False,1990,201,50,298,73,432,302.0,308.2,,high,Trending now
+2026-10-19,devops,True,48168,3388,3691,9945,9010,9959,-8.2,10.4,,high,Established / slowing
+2026-10-19,docker,True,230023,9156,7678,25153,21969,30351,19.2,14.5,,high,Mixed / watch
+2026-10-19,docker-compose,True,52796,1818,1376,4607,3515,5432,32.1,31.1,,high,Trending now
+2026-10-19,local-development,True,1107,128,100,308,174,366,28.0,77.0,,high,Trending now
+2026-10-19,microservices,True,22076,747,646,2084,2249,2625,15.6,-7.3,,high,Established / slowing
+2026-10-19,python,False,961471,55712,44483,145171,116454,131946,25.2,24.7,,high,Trending now
+2026-10-19,starlark,True,164,4,5,16,13,39,-20.0,23.1,,low,Mixed / watch
+2026-10-19,tilt,True,217,7,7,18,17,32,0.0,5.9,,low,Mixed / watch
+2026-10-19,tiltfile,True,7,1,0,1,0,1,100.0,100.0,,low,Too small / noisy
+2026-10-19,traefik,True,2840,89,66,225,220,482,34.8,2.3,,high,Trending now
+2026-10-19,typescript,True,484929,31185,24282,79797,55705,88189,28.4,43.2,,high,Trending now

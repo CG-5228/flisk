@@ -30,7 +30,7 @@ jobs:
           OUTPUT_DIR: reports/github-topics
       - name: Commit refreshed report
         run: |
-          git add reports/github-topics/github-topic-trends.csv reports/github-topics/github-topic-trends.md
+          git add reports/github-topics/github-topic-*.csv reports/github-topics/github-topic-trends.md
           if git diff --cached --quiet; then
             echo "Topic report unchanged."
           else

@@ -1,25 +1,16 @@
-topic,current_repo_topic,total_repos,new_repos_last_90d,new_repos_previous_90d,new_repo_growth_pct,active_repos_last_30d,trend_score,created_since,active_since
-development-environment,True,1990,298,73,308.2,432,3.082,2026-07-21,2026-09-19
-hot-reload,True,1059,135,75,80.0,184,0.8,2026-07-21,2026-09-19
-local-development,True,1107,308,174,77.0,366,0.77,2026-07-21,2026-09-19
-nix,False,7608,1013,576,75.9,2820,0.759,2026-07-21,2026-09-19
-developer-tools,True,87312,36549,22290,64.0,36734,0.64,2026-07-21,2026-09-19
-developer-experience,True,1936,603,372,62.1,696,0.621,2026-07-21,2026-09-19
-agda,False,329,22,10,120.0,45,0.563,2026-07-21,2026-09-19
-cli,True,151165,39460,25378,55.5,42850,0.555,2026-07-21,2026-09-19
-typescript,True,484907,79778,55706,43.2,88147,0.432,2026-07-21,2026-09-19
-docker-compose,True,52796,4607,3515,31.1,5431,0.311,2026-07-21,2026-09-19
-bun,True,11878,2585,1991,29.8,3525,0.298,2026-07-21,2026-09-19
-prolog,False,2583,104,87,19.5,140,0.195,2026-07-21,2026-09-19
-docker,True,230015,25145,21969,14.5,30339,0.145,2026-07-21,2026-09-19
-devops,True,48158,9937,9009,10.3,9948,0.103,2026-07-21,2026-09-19
-tiltfile,True,7,1,0,100.0,1,0.1,2026-07-21,2026-09-19
-starlark,True,164,16,13,23.1,39,0.092,2026-07-21,2026-09-19
-idris,False,252,3,2,50.0,6,0.087,2026-07-21,2026-09-19
-tilt,True,217,18,17,5.9,32,0.025,2026-07-21,2026-09-19
-traefik,True,2838,224,220,1.8,480,0.018,2026-07-21,2026-09-19
-docker-compose-alternative,True,0,0,0,0.0,0,0.0,2026-07-21,2026-09-19
-inner-loop,True,7,0,0,0.0,0,0.0,2026-07-21,2026-09-19
-pony,False,132,2,4,-50.0,10,-0.071,2026-07-21,2026-09-19
-microservices,True,22074,2083,2249,-7.4,2623,-0.074,2026-07-21,2026-09-19
-nim,False,2897,142,176,-19.3,274,-0.193,2026-07-21,2026-09-19
+snapshot_date,topic,current_repo_topic,total_repos,new_last_30d,new_previous_30d,new_last_90d,new_previous_90d,active_last_30d,acceleration_pct,growth_90d_pct,weekly_rolling_30d_change_pct,confidence,classification
+2026-10-19,cli,False,151189,19697,10040,39484,25378,42878,96.2,55.6,,high,Trending now
+2026-10-19,developer-experience,True,1936,296,159,603,372,696,86.2,62.1,,high,Trending now
+2026-10-19,developer-tools,True,87320,16932,9723,36557,22290,36744,74.1,64.0,,high,Trending now
+2026-10-19,development-environment,False,1990,201,50,298,73,432,302.0,308.2,,high,Trending now
+2026-10-19,docker,True,230023,9156,7678,25153,21969,30351,19.2,14.5,,high,Mixed / watch
+2026-10-19,docker-compose,True,52796,1818,1376,4607,3515,5432,32.1,31.1,,high,Trending now
+2026-10-19,local-development,True,1107,128,100,308,174,366,28.0,77.0,,high,Trending now
+2026-10-19,starlark,True,164,4,5,16,13,39,-20.0,23.1,,low,Mixed / watch
+2026-10-19,tilt,True,217,7,7,18,17,32,0.0,5.9,,low,Mixed / watch
+2026-10-19,tiltfile,True,7,1,0,1,0,1,100.0,100.0,,low,Too small / noisy
+2026-10-19,devops,True,48168,3388,3691,9945,9010,9959,-8.2,10.4,,high,Established / slowing
+2026-10-19,microservices,True,22076,747,646,2084,2249,2625,15.6,-7.3,,high,Established / slowing
+2026-10-19,python,False,961471,55712,44483,145171,116454,131946,25.2,24.7,,high,Trending now
+2026-10-19,traefik,True,2840,89,66,225,220,482,34.8,2.3,,high,Trending now
+2026-10-19,typescript,True,484929,31185,24282,79797,55705,88189,28.4,43.2,,high,Trending now
