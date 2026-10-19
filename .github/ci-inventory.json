@@ -635,6 +635,14 @@
 			"required": false,
 			"reason": "Full 100-service fixture boot, weekly and manual, carried over from erp-scale-e2e.yml at the #1302 cutover; suite tests/e2e/scale/erp",
 			"owner": "maintainers"
+		},
+		{
+			"workflow": "github-topic-trends.yml",
+			"job": "trends",
+			"tier": "report",
+			"required": false,
+			"reason": "Weekly and manually triggered report of GitHub repository topic growth and activity",
+			"owner": "maintainers"
 		}
 	]
 }
