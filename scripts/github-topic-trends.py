@@ -78,14 +78,23 @@ def api_get(path: str, params: dict[str, str], token: str | None) -> dict:
                 reset = response.getheader("X-RateLimit-Reset")
                 if retry_after:
                     delay = max(1, int(retry_after))
-                elif reset:
-                    delay = max(1, min(int(reset) - int(time.time()) + 1, 90))
+                elif remaining == "0" and reset:
+                    delay = max(1, int(reset) - int(time.time()) + 1)
+                elif remaining != "0":
+                    # Secondary limits do not exhaust the primary quota; pause
+                    # before retrying instead of trusting its reset timestamp.
+                    delay = max(60, 5 * (2 ** attempt))
                 else:
                     delay = min(60, 5 * (2 ** attempt))
                 time.sleep(delay)
                 continue
             if response.status == 422:
                 raise RuntimeError(f"GitHub rejected query {params.get('q', path)!r}: {body_text}")
+            if 500 <= response.status < 600:
+                if attempt < 4:
+                    time.sleep(min(60, 2 ** attempt))
+                    continue
+                raise RuntimeError(f"GitHub API returned HTTP {response.status} after retries: {body_text}")
             if response.status >= 400:
                 raise RuntimeError(f"GitHub API returned HTTP {response.status}: {body_text}")
             payload = json.loads(body)
@@ -150,10 +159,13 @@ def main() -> None:
 
     for topic in sorted(TRACKED_TOPICS):
         total = count(token, topic)
-        recent30 = count(token, topic, f"created:>={d30.isoformat()}")
-        previous30 = count(token, topic, f"created:{d60.isoformat()}..{(d30 - timedelta(days=1)).isoformat()}")
-        recent90 = count(token, topic, f"created:>={d90.isoformat()}")
-        previous90 = count(token, topic, f"created:{d180.isoformat()}..{(d90 - timedelta(days=1)).isoformat()}")
+        # GitHub's created:>=date includes that whole calendar date. Shift each
+        # recent lower bound forward one day and align prior ranges so compared
+        # windows contain the same number of dates.
+        recent30 = count(token, topic, f"created:>={(d30 + timedelta(days=1)).isoformat()}")
+        previous30 = count(token, topic, f"created:{(d60 + timedelta(days=1)).isoformat()}..{d30.isoformat()}")
+        recent90 = count(token, topic, f"created:>={(d90 + timedelta(days=1)).isoformat()}")
+        previous90 = count(token, topic, f"created:{(d180 + timedelta(days=1)).isoformat()}..{d90.isoformat()}")
         active30 = count(token, topic, f"pushed:>={d30.isoformat()}")
         acceleration = pct_change(recent30, previous30)
         growth90 = pct_change(recent90, previous90)
