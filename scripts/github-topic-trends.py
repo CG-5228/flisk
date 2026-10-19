@@ -14,13 +14,13 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 TOPICS = [
-    # Existing TDK topics plus adjacent approaches worth tracking.
-    "cli", "developer-tools", "developer-experience", "devops",
-    "local-development", "microservices", "docker", "docker-compose",
-    "docker-compose-alternative", "hot-reload", "inner-loop", "tilt",
-    "tiltfile", "traefik", "scaffolding", "project-generator",
-    "developer-onboarding", "development-environment", "monorepo",
-    "cloud-native", "devcontainers", "nix", "skaffold", "garden",
+    # TDK's current topics, plus a few language and tooling hypotheses to evaluate.
+    "bun", "cli", "developer-experience", "developer-tools",
+    "development-environment", "devops", "docker", "docker-compose",
+    "docker-compose-alternative", "hot-reload", "inner-loop",
+    "local-development", "microservices", "starlark", "tilt", "tiltfile",
+    "traefik", "typescript", "nix", "nim", "pony", "idris", "agda",
+    "prolog",
 ]
 CURRENT_TOPICS = {
     "bun", "cli", "developer-experience", "developer-tools", "development-environment",
@@ -102,7 +102,7 @@ def main() -> None:
     top = rows[:10]
     with (out / "github-topic-trends.md").open("w", encoding="utf-8") as file:
         file.write(f"# GitHub topic trends — {now.isoformat()}\n\n")
-        file.write("Counts come from GitHub repository search. Growth compares newly created matching repositories in the latest 90 days with the prior 90 days. Activity means pushed in the last 30 days. Trend score is growth multiplied by a volume factor (capped at 100 new repositories) and an activity factor (active repositories relative to new repositories), to reduce small-sample spikes. Topics already assigned to TDK are marked. This is a discovery signal, not proof of demand or project fit; it does not change repository metadata.\n\n")
+        file.write("Counts come from GitHub repository search. Growth compares newly created matching repositories in the latest 90 days with the prior 90 days. Activity means pushed in the last 30 days. Trend score is growth multiplied by a volume factor (capped at 100 new repositories) and an activity factor (active repositories relative to new repositories), to reduce small-sample spikes. Topics already assigned to TDK are marked. Experimental language topics are included for comparison only; a trend signal does not prove product fit or justify adding a tag without maintained support. The workflow never changes repository metadata.\n\n")
         file.write("| Topic | On TDK | Total repos | New (90d) | Prior 90d | Growth | Active (30d) | Score |\n|---|:---:|---:|---:|---:|---:|---:|---:|\n")
         for row in top:
             current = "yes" if row["current_repo_topic"] else "no"
