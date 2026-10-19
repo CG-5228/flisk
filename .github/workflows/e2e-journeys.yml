@@ -10,6 +10,9 @@ name: 🧭 E2E journeys
 
 on:
   merge_group:
+  # After a merge, the quickstart leg checks main (the selector picks only the suites with the "main" trigger, and only when a path changed).
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       version:
@@ -45,7 +48,7 @@ jobs:
     name: Check the licensed journey secret
     runs-on: ubuntu-26.04
     timeout-minutes: 2
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.event_name != 'push'
     permissions: {}
     outputs:
       configured: ${{ steps.check.outputs.configured }}
@@ -93,7 +96,7 @@ jobs:
           EVENT: ${{ github.event_name }}
           SCHEDULE: ${{ github.event.schedule }}
           VERSION_INPUT: ${{ github.event.inputs.version }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
           LICENSED: ${{ needs.license.outputs.configured }}
         run: scripts/e2e/select-journeys.sh
 
