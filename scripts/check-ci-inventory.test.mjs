@@ -3,7 +3,7 @@
 // Unit tests for the CI inventory rules in check-ci-inventory.mjs. Run by `make test-shell`.
 import assert from "node:assert/strict";
 import test from "node:test";
-import { checkInventory } from "./check-ci-inventory.mjs";
+import { checkInventory, checkRequiredContexts } from "./check-ci-inventory.mjs";
 
 const job = (workflow, id, extra = {}) => ({
 	workflow,
@@ -97,6 +97,21 @@ test("required entries must equal the branch protection contexts", () => {
 	assert.match(
 		problems[1],
 		/"gate" is in branch protection for main but not marked required/,
+	);
+});
+
+test("a required ruleset check is validated independently of classic branch protection", () => {
+	const jobs = [job("ci.yml", "summary-review", { checkName: "🧐 PR summary review" })];
+	const inventory = {
+		jobs: [entry("ci.yml", "summary-review", { required: true })],
+	};
+	assert.deepEqual(
+		checkRequiredContexts({ inventory, jobs, contexts: ["🧐 PR summary review"], source: "ruleset 'main merge queue'" }),
+		[],
+	);
+	assert.match(
+		checkRequiredContexts({ inventory, jobs, contexts: [], source: "ruleset 'main merge queue'" })[0],
+		/not in ruleset 'main merge queue'/,
 	);
 });
 

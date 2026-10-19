@@ -11,7 +11,10 @@ token.
 When adding a required check, merge the workflow that produces it first, then
 add that check to the live GitHub rulesets. This avoids requiring a status
 context before GitHub can run it from the default branch. The main-branch check
-inventory is also recorded in `../required-checks.json` and validated by CI.
+inventory is also recorded in `../required-checks.json` for classic branch
+protection. Required checks in the `main merge queue` ruleset are validated
+against the same CI inventory independently, since rulesets and classic branch
+protection can enforce different check sets.
 
 `main.json` keeps the main-branch merge queue and requires PR review and the
 listed checks. `releases.json` applies the same review and safety requirements

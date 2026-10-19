@@ -1,7 +1,8 @@
 // Copyright (c) 2026 TDK Landscape contributors
 // SPDX-License-Identifier: MIT
 // Checks .github/ci-inventory.json against the jobs in .github/workflows/*.yml (#1281, tracker #1279). Every job needs an
-// entry with a tier, no two jobs may report the same check name, the required entries must equal main's branch protection,
+// entry with a tier, no two jobs may report the same check name, the required entries must equal main's branch protection
+// and rulesets,
 // every job needs a timeout (reusable-workflow callers excepted) and every pull_request workflow needs a concurrency group,
 // and report jobs never run on push. A known violation is recorded in its entry's "exempt" map, keyed by rule, with the
 // tracking issue as the value, so the check stays green while the fix is scheduled.
@@ -85,6 +86,28 @@ export function loadSnapshot(file) {
 	return snapshot.contexts;
 }
 
+export function checkRequiredContexts({ inventory, jobs, contexts, source }) {
+	const problems = [];
+	const entries = Array.isArray(inventory?.jobs) ? inventory.jobs : [];
+	const jobsByKey = new Map(jobs.map((j) => [`${j.workflow}:${j.job}`, j]));
+	const requiredNames = new Set(
+		entries
+			.filter((entry) => entry.required === true && jobsByKey.has(`${entry.workflow}:${entry.job}`))
+			.map((entry) => jobsByKey.get(`${entry.workflow}:${entry.job}`).checkName),
+	);
+	for (const name of requiredNames) {
+		if (!contexts.includes(name)) {
+			problems.push(`required check "${name}" is in the inventory but not in ${source}`);
+		}
+	}
+	for (const name of contexts) {
+		if (!requiredNames.has(name)) {
+			problems.push(`required check "${name}" is in ${source} but not marked required in the inventory`);
+		}
+	}
+	return problems;
+}
+
 // Every problem with the inventory against the jobs and the required check names. Returns messages; an empty list passes.
 export function checkInventory({ inventory, jobs, contexts }) {
 	const problems = [];
@@ -164,26 +187,15 @@ export function checkInventory({ inventory, jobs, contexts }) {
 		problems.push(`check name "${name}" is reported by ${who}`);
 	}
 
-	// Required entries must equal the branch protection contexts for main.
-	const requiredNames = new Set(
-		entries
-			.filter(
-				(e) => e.required === true && jobsByKey.has(jobKey(e.workflow, e.job)),
-			)
-			.map((e) => jobsByKey.get(jobKey(e.workflow, e.job)).checkName),
+	// Required entries must match each required-check source. Rulesets and classic branch protection are independent.
+	problems.push(
+		...checkRequiredContexts({
+			inventory,
+			jobs,
+			contexts,
+			source: "branch protection for main",
+		}),
 	);
-	for (const name of requiredNames) {
-		if (!contexts.includes(name))
-			problems.push(
-				`required check "${name}" is in the inventory but not in branch protection for main`,
-			);
-	}
-	for (const name of contexts) {
-		if (!requiredNames.has(name))
-			problems.push(
-				`required check "${name}" is in branch protection for main but not marked required in the inventory`,
-			);
-	}
 
 	for (const job of knownJobs) {
 		const entry = entryByKey.get(jobKey(job.workflow, job.job));
@@ -208,6 +220,20 @@ export function checkInventory({ inventory, jobs, contexts }) {
 		}
 	}
 	return problems;
+}
+
+export function fetchLiveRulesetContexts(repo, rulesetName) {
+	const summaries = JSON.parse(
+		execFileSync("gh", ["api", `repos/${repo}/rulesets?per_page=100`], { encoding: "utf8" }),
+	);
+	const summary = summaries.find((ruleset) => ruleset.name === rulesetName);
+	if (!summary) throw new Error(`ruleset '${rulesetName}' was not found`);
+	const ruleset = JSON.parse(
+		execFileSync("gh", ["api", `repos/${repo}/rulesets/${summary.id}`], { encoding: "utf8" }),
+	);
+	return [...new Set(ruleset.rules
+		.filter((rule) => rule.type === "required_status_checks")
+		.flatMap((rule) => rule.parameters.required_status_checks.map((check) => check.context)))].sort();
 }
 
 function main(argv) {
@@ -247,10 +273,7 @@ function main(argv) {
 	}
 	let contexts;
 	try {
-		contexts =
-			args.mode === "live"
-				? fetchLiveContexts(repo)
-				: loadSnapshot(snapshotPath);
+		contexts = args.mode === "live" ? fetchLiveContexts(repo) : loadSnapshot(snapshotPath);
 	} catch (error) {
 		console.error(
 			`check-ci-inventory: cannot read required checks (${args.mode}): ${error.message}`,
@@ -258,6 +281,20 @@ function main(argv) {
 		return 1;
 	}
 	const problems = checkInventory({ inventory, jobs, contexts });
+	if (args.mode === "live") {
+		try {
+			problems.push(
+				...checkRequiredContexts({
+					inventory,
+					jobs,
+					contexts: fetchLiveRulesetContexts(repo, "main merge queue"),
+					source: "ruleset 'main merge queue'",
+				}),
+			);
+		} catch (error) {
+			problems.push(`cannot read required checks from the main ruleset: ${error.message}`);
+		}
+	}
 	for (const problem of problems)
 		console.error(`check-ci-inventory: ${problem}`);
 	if (problems.length > 0) {
