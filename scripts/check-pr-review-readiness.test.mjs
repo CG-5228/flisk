@@ -51,3 +51,25 @@ test("does not treat the checklist bookkeeping item as verification", () => {
 	);
 	assert.equal(result.passed, false);
 });
+
+test("rejects a summary that is only whitespace or an HTML comment", () => {
+	assert.equal(
+		reviewReadiness(body("   \n\n<!-- Describe what changed -->", "- [x] `npm test`")).passed,
+		false,
+	);
+});
+
+test("accepts Windows line endings and a heading in another capitalization", () => {
+	const text = body("Added a repository ruleset check.", "- [x] `npm test`").replace(/\n/g, "\r\n").replace("## What changed?", "## WHAT CHANGED?");
+	assert.equal(reviewReadiness(text).passed, true);
+});
+
+test("rejects a description with no verification section", () => {
+	const text = "## What changed?\n\nAdded a repository ruleset check.\n";
+	assert.equal(reviewReadiness(text).passed, false);
+});
+
+test("reads the first matching section when a heading is duplicated", () => {
+	const text = "## What changed?\n\nTODO\n\n## What changed?\n\nAdded a real check.\n\n## How did you check it?\n\n- [x] `npm test`\n";
+	assert.equal(reviewReadiness(text).passed, false);
+});
