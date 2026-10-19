@@ -61,7 +61,7 @@ def api_get(path: str, params: dict[str, str], token: str | None) -> dict:
         }
         if token:
             headers["Authorization"] = f"Bearer {token}"
-        connection = http.client.HTTPSConnection(
+        connection = http.client.HTTPSConnection(  # nosemgrep: python.lang.security.audit.httpsconnection-detected.httpsconnection-detected -- Explicit certificate-verifying SSL context; workflow requires Python 3.12.
             "api.github.com", timeout=30, context=ssl.create_default_context()
         )
         try:
