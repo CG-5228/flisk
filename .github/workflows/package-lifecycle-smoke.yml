@@ -1,13 +1,13 @@
 name: 📦 Packed CLI lifecycle smoke
 
 on:
-  pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: package-lifecycle-smoke-${{ github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -16,7 +16,6 @@ jobs:
   docs:
     runs-on: ubuntu-26.04
     timeout-minutes: 2
-    if: github.event_name == 'pull_request'
     permissions:
       contents: read
       pull-requests: read
