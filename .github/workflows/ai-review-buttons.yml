@@ -12,7 +12,7 @@ name: 🤖 AI review buttons
 
 on:
   pull_request_target: # zizmor: ignore[dangerous-triggers] never checks out or runs PR code; only writes the PR body
-    types: [opened, reopened, edited]
+    types: [opened, reopened]
   workflow_dispatch:
 
 permissions: {}

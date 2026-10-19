@@ -7,10 +7,6 @@ on:
     paths:
       - "package.json"
       - "cli/package.json"
-  # Every pull request runs this workflow so the release checks (windows-binary) always report.
-  # The `changes` job below decides whether the build and smoke test actually run; when they
-  # are not needed they are skipped, and a skipped required check counts as passing.
-  pull_request:
 
 permissions:
   contents: read

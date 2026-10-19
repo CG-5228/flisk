@@ -6,8 +6,6 @@ name: 🔀 Keep PR branches current
 on:
   push:
     branches: [main]
-  pull_request_target: # zizmor: ignore[dangerous-triggers] uses only GitHub API metadata; never checks out or runs PR code
-    types: [opened, reopened, synchronize, ready_for_review]
 
 permissions: {}
 
