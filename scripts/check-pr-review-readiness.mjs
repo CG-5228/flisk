@@ -11,12 +11,37 @@ const PLACEHOLDERS = [
 ];
 
 function withoutComments(text) {
-	return text.replace(/<!--[\s\S]*?-->/g, "").trim();
+	const lines = text.split(/\r?\n/);
+	const visible = [];
+	let inComment = false;
+	for (const line of lines) {
+		let index = 0;
+		let output = "";
+		while (index < line.length) {
+			if (inComment) {
+				const close = line.indexOf("-->", index);
+				if (close < 0) break;
+				inComment = false;
+				index = close + 3;
+				continue;
+			}
+			const open = line.indexOf("<!--", index);
+			if (open < 0) {
+				output += line.slice(index);
+				break;
+			}
+			output += line.slice(index, open);
+			inComment = true;
+			index = open + 4;
+		}
+		if (output.trim()) visible.push(output);
+	}
+	return visible.join("\n").trim();
 }
 
 function section(body, heading) {
 	const lines = body.split(/\r?\n/);
-	const start = lines.findIndex((line) => new RegExp(`^##\\s+${heading}\\s*$`, "i").test(line));
+	const start = lines.findIndex((line) => line.trim().toLowerCase() === heading.toLowerCase());
 	if (start < 0) return "";
 	const end = lines.findIndex((line, index) => index > start && /^##\s+/.test(line));
 	return withoutComments(lines.slice(start + 1, end < 0 ? lines.length : end).join("\n"));
@@ -30,8 +55,8 @@ function nonPlaceholderLines(text) {
 }
 
 export function reviewReadiness(body) {
-	const summary = section(body, "What changed\\?");
-	const verification = section(body, "How did you check it\\?");
+	const summary = section(body, "## What changed?");
+	const verification = section(body, "## How did you check it?");
 	const issues = [];
 
 	if (nonPlaceholderLines(summary).length === 0) {
