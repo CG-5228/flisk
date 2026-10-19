@@ -6,6 +6,7 @@ import csv
 import http.client
 import json
 import os
+import ssl
 import sys
 import time
 from datetime import date, datetime, timedelta, timezone
@@ -60,7 +61,9 @@ def api_get(path: str, params: dict[str, str], token: str | None) -> dict:
         }
         if token:
             headers["Authorization"] = f"Bearer {token}"
-        connection = http.client.HTTPSConnection("api.github.com", timeout=30)
+        connection = http.client.HTTPSConnection(
+            "api.github.com", timeout=30, context=ssl.create_default_context()
+        )
         try:
             connection.request("GET", target, headers=headers)
             response = connection.getresponse()
