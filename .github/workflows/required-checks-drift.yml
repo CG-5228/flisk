@@ -1,7 +1,6 @@
-# Compares main's branch protection and ruleset snapshots with GitHub, and opens one issue when they differ.
+# Compares the main merge queue ruleset and the release ruleset with their checked-in snapshots, and opens one issue when they differ.
 # Runs on the default branch only and never checks out pull request code, so the token that reads branch protection is
-# never exposed to a pull request. Pull request runs check the committed snapshot in .github/required-checks.json instead.
-# After changing branch protection, refresh the snapshot with `node scripts/check-ci-inventory.mjs --refresh-snapshot`.
+# never exposed to a pull request. Pull request runs check the committed ruleset snapshots in .github/rulesets instead.
 name: 🔐 Required checks drift
 
 on:
@@ -18,7 +17,7 @@ concurrency:
 
 jobs:
   drift:
-    name: Compare required checks with branch protection
+    name: Compare required checks with the rulesets
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -28,7 +27,7 @@ jobs:
           CI_INVENTORY_TOKEN: ${{ secrets.CI_INVENTORY_TOKEN }}
         run: |
           if [ -z "$CI_INVENTORY_TOKEN" ]; then
-            echo "::warning title=CI_INVENTORY_TOKEN not configured::Skipped the required-checks drift check. Add a token with Administration: read as the CI_INVENTORY_TOKEN Actions secret."
+            echo "::warning title=CI_INVENTORY_TOKEN not configured::Skipped the rulesets drift check. Add a token with Administration: read as the CI_INVENTORY_TOKEN Actions secret."
             echo "configured=false" >> "$GITHUB_OUTPUT"
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
@@ -40,7 +39,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Compare live protection settings with snapshots
+      - name: Compare live rulesets with snapshots
         if: steps.token.outputs.configured == 'true'
         id: compare
         env:

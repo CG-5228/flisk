@@ -1,15 +1,14 @@
 // Copyright (c) 2026 TDK Landscape contributors
 // SPDX-License-Identifier: MIT
 // Checks .github/ci-inventory.json against the jobs in .github/workflows/*.yml (#1281, tracker #1279). Every job needs an
-// entry with a tier, no two jobs may report the same check name, the required entries must equal main's branch protection
-// and rulesets,
-// every job needs a timeout (reusable-workflow callers excepted) and every pull_request workflow needs a concurrency group,
-// and report jobs never run on push. A known violation is recorded in its entry's "exempt" map, keyed by rule, with the
-// tracking issue as the value, so the check stays green while the fix is scheduled.
-//   node scripts/check-ci-inventory.mjs [--root <repo dir>] [--live | --refresh-snapshot]
-// The required set comes from .github/required-checks.json, a snapshot of main's branch protection, so pull request runs
-// need no admin token. --live reads branch protection with `gh api` (needs administration read; only the scheduled drift
-// job on main uses it). --refresh-snapshot writes the snapshot from live protection and exits.
+// entry with a tier, no two jobs may report the same check name, the required entries must equal the main merge queue
+// ruleset's required checks, every job needs a timeout (reusable-workflow callers excepted) and every pull_request workflow
+// needs a concurrency group, and report jobs never run on push. A known violation is recorded in its entry's "exempt" map,
+// keyed by rule, with the tracking issue as the value, so the check stays green while the fix is scheduled.
+//   node scripts/check-ci-inventory.mjs [--root <repo dir>] [--live]
+// The required set comes from .github/rulesets/main.json, the checked-in snapshot of the main merge queue ruleset, so pull
+// request runs need no admin token. --live reads the live ruleset with `gh api` (needs administration read; only the
+// scheduled drift job on main uses it). Branch protection is not used: the ruleset is the single source of required checks.
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -59,31 +58,6 @@ export function loadJobs(workflowsDir) {
 		}
 	}
 	return jobs;
-}
-
-// Required check names for main: from the committed snapshot, or live from branch protection.
-export function fetchLiveContexts(repo) {
-	const body = JSON.parse(
-		execFileSync(
-			"gh",
-			["api", `repos/${repo}/branches/main/protection/required_status_checks`],
-			{ encoding: "utf8" },
-		),
-	);
-	return [
-		...new Set([
-			...(body.contexts ?? []),
-			...(body.checks ?? []).map((c) => c.context),
-		]),
-	].sort();
-}
-
-export function loadSnapshot(file) {
-	const snapshot = JSON.parse(readFileSync(file, "utf8"));
-	if (!Array.isArray(snapshot.contexts)) {
-		throw new Error(`${file} has no contexts array`);
-	}
-	return snapshot.contexts;
 }
 
 // exact: every required job must be in contexts and every context must be a required job. A ruleset may require a subset, so it passes exact: false.
@@ -194,7 +168,7 @@ export function checkInventory({ inventory, jobs, contexts }) {
 			inventory,
 			jobs,
 			contexts,
-			source: "branch protection for main",
+			source: "the main merge queue ruleset",
 		}),
 	);
 
@@ -249,22 +223,9 @@ function main(argv) {
 	for (let i = 0; i < argv.length; i += 1) {
 		if (argv[i] === "--root") args.root = path.resolve(argv[++i]);
 		else if (argv[i] === "--live") args.mode = "live";
-		else if (argv[i] === "--refresh-snapshot") args.mode = "refresh";
 		else throw new Error(`unknown argument: ${argv[i]}`);
 	}
 	const repo = process.env.GITHUB_REPOSITORY ?? "tdk-landscape/tdk-cli-core";
-	const snapshotPath = path.join(args.root, ".github", "required-checks.json");
-	if (args.mode === "refresh") {
-		const contexts = fetchLiveContexts(repo);
-		writeFileSync(
-			snapshotPath,
-			`${JSON.stringify({ branch: "main", contexts }, null, "\t")}\n`,
-		);
-		console.log(
-			`check-ci-inventory: wrote ${contexts.length} required checks to ${path.relative(args.root, snapshotPath)}`,
-		);
-		return 0;
-	}
 	const inventoryPath = path.join(args.root, ".github", "ci-inventory.json");
 	const inventory = JSON.parse(readFileSync(inventoryPath, "utf8"));
 	let jobs;
@@ -278,7 +239,14 @@ function main(argv) {
 	}
 	let contexts;
 	try {
-		contexts = args.mode === "live" ? fetchLiveContexts(repo) : loadSnapshot(snapshotPath);
+		contexts =
+			args.mode === "live"
+				? fetchLiveRulesetContexts(repo, "main merge queue")
+				: contextsOf(
+						JSON.parse(
+							readFileSync(path.join(args.root, ".github", "rulesets", "main.json"), "utf8"),
+						),
+					);
 	} catch (error) {
 		console.error(
 			`check-ci-inventory: cannot read required checks (${args.mode}): ${error.message}`,
@@ -286,33 +254,6 @@ function main(argv) {
 		return 1;
 	}
 	const problems = checkInventory({ inventory, jobs, contexts });
-	if (args.mode === "snapshot") {
-		const snapshot = JSON.parse(readFileSync(path.join(args.root, ".github", "rulesets", "main.json"), "utf8"));
-		problems.push(
-			...checkRequiredContexts({
-				inventory,
-				jobs,
-				contexts: contextsOf(snapshot),
-				source: "ruleset snapshot main.json",
-				exact: false,
-			}),
-		);
-	}
-	if (args.mode === "live") {
-		try {
-			problems.push(
-				...checkRequiredContexts({
-					inventory,
-					jobs,
-					contexts: fetchLiveRulesetContexts(repo, "main merge queue"),
-					source: "ruleset 'main merge queue'",
-					exact: false,
-				}),
-			);
-		} catch (error) {
-			problems.push(`cannot read required checks from the main ruleset: ${error.message}`);
-		}
-	}
 	for (const problem of problems)
 		console.error(`check-ci-inventory: ${problem}`);
 	if (problems.length > 0) {
