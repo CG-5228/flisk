@@ -72,7 +72,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
-        run: |
+        run: | # zizmor: ignore[use-trusted-publishing] GitHub Packages does not support npm trusted publishing; authenticate with the repository GITHUB_TOKEN
           if npm view "@tdk-landscape/tdk-cli-core@${VERSION}" version --registry=https://npm.pkg.github.com >/dev/null 2>&1; then
             echo "@tdk-landscape/tdk-cli-core@${VERSION} is already published to GitHub Packages, skipping."
           else
@@ -83,7 +83,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
-        run: |
+        run: | # zizmor: ignore[adhoc-packages] Verifies the published CLI can be installed from GitHub Packages in a fresh isolated prefix
           PREFIX="$RUNNER_TEMP/tdk-install"
           NPMRC="$RUNNER_TEMP/consumer.npmrc"
           # npm must expand this environment reference when it reads the temporary config.
