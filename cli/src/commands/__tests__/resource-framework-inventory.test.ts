@@ -1,24 +1,21 @@
 // Copyright (c) 2026 TDK Landscape contributors
 // SPDX-License-Identifier: MIT
-import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { BACKEND_FRAMEWORKS } from "../../backend-frameworks/registry.js";
-import { FRONTEND_FRAMEWORKS } from "../../frontend-frameworks/registry.js";
-import { tdkBin } from "../../test-support/index.js";
+import { FRONTEND_FRAMEWORKS, listFrontendFrameworks } from "../../frontend-frameworks/registry.js";
+import { runTdk } from "../../test-support/index.js";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
 
 /**
- * The inventory is a CLI contract, so the test runs the real binary. A spawned process also keeps
- * commander's option state per run: an in-process parse keeps the previous run's `--type` source.
+ * The inventory is a CLI contract, so the test runs the real binary through the shared `runTdk`
+ * helper (no color, a real exit status). A spawned process also keeps commander's option state per
+ * run: an in-process parse keeps the previous run's `--type` source.
  */
-function tdk(args: string[]) {
-  return spawnSync(process.execPath, [tdkBin, ...args], {
-    encoding: "utf-8",
-    env: { ...process.env, TDK_EXTENSION_SOURCE: repoRoot },
-  });
+function tdk(args: readonly string[]) {
+  return runTdk(args, { cwd: repoRoot, env: { TDK_EXTENSION_SOURCE: repoRoot } });
 }
 
 /** The listing is tab separated, one framework per row. */
@@ -37,10 +34,12 @@ describe("tdk resource --frameworks", () => {
     const listed = rows(result.stdout);
     expect(listed.map((row) => row[0])).toEqual(Object.keys(FRONTEND_FRAMEWORKS));
     // The historical columns stay: id, label, kind, verification, command.
+    const verified = new Map(listFrontendFrameworks().map((entry) => [entry.id, entry.verified]));
     for (const row of listed) {
       expect(row).toHaveLength(5);
       expect(row[2]).toBe("vite-spa");
-      expect(row[3]).toBe("verified");
+      // The verification comes from the registry, so an unverified provider does not break the test.
+      expect(row[3]).toBe(verified.get(row[0]) ? "verified" : "unverified");
       expect(row[4]).toBe(`tdk resource <name> --type frontend --framework ${row[0]}`);
     }
   });
@@ -48,6 +47,15 @@ describe("tdk resource --frameworks", () => {
   it("lists the same frontend frameworks for --type frontend", () => {
     const result = tdk(["resource", "--type", "frontend", "--frameworks"]);
 
+    expect(result.status, result.stderr).toBe(0);
+    expect(rows(result.stdout)).toEqual(rows(tdk(["resource", "--frameworks"]).stdout));
+  });
+
+  it("keeps the frontend listing when --language is given without --type", () => {
+    const result = tdk(["resource", "--language", "python", "--frameworks"]);
+
+    // `--language` is a backend option: without an explicit `--type` the listing stays the
+    // historical frontend one and exits successfully, as it did before the listing was type aware.
     expect(result.status, result.stderr).toBe(0);
     expect(rows(result.stdout)).toEqual(rows(tdk(["resource", "--frameworks"]).stdout));
   });
@@ -64,7 +72,7 @@ describe("tdk resource --frameworks", () => {
       // The display name, the language (and runtime) it is scaffolded with, and its compatibility.
       expect(row[1]).toBe(provider.label);
       expect(row[2]).toBe("bun");
-      expect(row[3]).toBe("compatible");
+      expect(row[3]).toBe("compatible with bun");
       expect(row[4]).toBe(`tdk resource <name> --type backend --framework ${row[0]}`);
     }
   });
@@ -79,6 +87,9 @@ describe("tdk resource --frameworks", () => {
       // Python owns its runtime, so no framework can be combined with it.
       expect(row[2]).toBe("bun");
       expect(row[3]).toBe("incompatible with --language python");
+      // The command creates the resource in the requested language: that language owns its runtime,
+      // so it has no framework to pick.
+      expect(row[4]).toBe("tdk resource <name> --type backend --language python");
     }
   });
 
@@ -87,7 +98,11 @@ describe("tdk resource --frameworks", () => {
 
     expect(result.status, result.stderr).toBe(0);
     for (const row of rows(result.stdout)) {
-      expect(row[3]).toBe("compatible");
+      expect(row[3]).toBe("compatible with bun");
+      // The requested language is named, so a copied row scaffolds the language that was asked about.
+      expect(row[4]).toBe(
+        `tdk resource <name> --type backend --framework ${row[0]} --language bun`,
+      );
     }
   });
 

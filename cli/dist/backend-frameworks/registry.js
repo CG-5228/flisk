@@ -39,25 +39,42 @@ function compatibleLanguages(frameworkId) {
             resolveBackendFramework("backend", frameworkId, BACKEND_LANGUAGES[languageId]);
             return true;
         }
-        catch {
-            return false;
+        catch (error) {
+            // Only the "a language that owns its runtime cannot be combined with a framework" rule is
+            // expected here. Any other error is a bug and must surface instead of silently shrinking
+            // the language column.
+            if (error instanceof TdkError)
+                return false;
+            throw error;
         }
     });
 }
 /**
  * Lists the registered backend frameworks with the language (and runtime) they are scaffolded with, so
  * `tdk resource --type backend --frameworks` is the whole backend discovery surface.
+ *
+ * `languageId` is the language the listing is judged against; the default Bun language is used when it
+ * is omitted. A language that was asked for is named in the printed command, so copying a row never
+ * scaffolds a different language than the one the listing was about.
  */
 export function listBackendFrameworks(languageId) {
-    const requested = languageId ? getBackendLanguage(languageId) : undefined;
+    const requested = getBackendLanguage(languageId);
+    const namesLanguage = languageId !== undefined;
     return Object.entries(BACKEND_FRAMEWORKS).map(([id, provider]) => {
         const languages = compatibleLanguages(id);
+        const compatible = languages.includes(requested.id);
+        const languageFlag = namesLanguage ? ` --language ${requested.id}` : "";
+        // A language that owns its runtime cannot be combined with a framework, so the row carries the
+        // command that creates the resource in that language, without a framework.
+        const command = compatible
+            ? `tdk resource <name> --type backend --framework ${id}${languageFlag}`
+            : `tdk resource <name> --type backend${languageFlag}`;
         return {
             id,
             label: provider.label,
             languages,
-            compatible: requested ? languages.includes(requested.id) : true,
-            command: `tdk resource <name> --type backend --framework ${id}`,
+            compatible,
+            command,
         };
     });
 }

@@ -19,6 +19,10 @@ export interface BackendFrameworkInventoryEntry {
 /**
  * Lists the registered backend frameworks with the language (and runtime) they are scaffolded with, so
  * `tdk resource --type backend --frameworks` is the whole backend discovery surface.
+ *
+ * `languageId` is the language the listing is judged against; the default Bun language is used when it
+ * is omitted. A language that was asked for is named in the printed command, so copying a row never
+ * scaffolds a different language than the one the listing was about.
  */
 export declare function listBackendFrameworks(languageId?: string): BackendFrameworkInventoryEntry[];
 export declare function getBackendFramework(frameworkId?: string): BackendFrameworkProvider;

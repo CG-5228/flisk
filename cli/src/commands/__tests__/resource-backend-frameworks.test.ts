@@ -191,6 +191,9 @@ describe("backend framework inventory", () => {
       for (const entry of listBackendFrameworks(languageId)) {
         expect(entry.languages).not.toContain(languageId);
         expect(entry.compatible).toBe(false);
+        // The command creates the resource in the requested language; that language owns its runtime,
+        // so no framework applies to it.
+        expect(entry.command).toBe(`tdk resource <name> --type backend --language ${languageId}`);
       }
     }
   });
@@ -199,6 +202,10 @@ describe("backend framework inventory", () => {
     for (const entry of listBackendFrameworks("bun")) {
       expect(entry.languages).toContain("bun");
       expect(entry.compatible).toBe(true);
+      // The requested language is named, so a copied row scaffolds the language that was asked about.
+      expect(entry.command).toBe(
+        `tdk resource <name> --type backend --framework ${entry.id} --language bun`,
+      );
     }
   });
 

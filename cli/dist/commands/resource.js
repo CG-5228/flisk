@@ -312,33 +312,45 @@ export function parseResourceType(type) {
 /**
  * Prints the framework inventory for the requested resource type.
  *
- * Without an explicit `--type` the listing stays the historical frontend one, so `tdk resource --frameworks`
- * keeps working exactly as before. `--type frontend` and `--type backend` list that type's frameworks, and the
+ * Without an explicit `--type` the listing stays the historical frontend one, byte for byte, so
+ * `tdk resource --frameworks` keeps working exactly as before: `--language` is a backend option and
+ * never applies to it. `--type frontend` and `--type backend` list that type's frameworks, and the
  * backend listing carries the language (and runtime) each framework is scaffolded with.
  */
 function printFrameworkInventory(options, isTypeExplicit) {
-    const resourceType = isTypeExplicit ? parseResourceType(options.type ?? "backend") : "frontend";
+    // No explicit `--type` means the historical frontend listing, so `--language` is not applied to it:
+    // it is a backend option, and the frontend listing has never carried one.
+    if (!isTypeExplicit) {
+        printFrontendFrameworks();
+        return;
+    }
+    const resourceType = parseResourceType(options.type ?? "backend");
+    if (resourceType !== "frontend" && resourceType !== "backend") {
+        throw new TdkError(`No frameworks are registered for --type ${resourceType}.`, [
+            "Use --type frontend or --type backend to list frameworks",
+            "Omit --type to list the frontend frameworks",
+        ]);
+    }
     // `--language` belongs to backends only, so the resource command rejects it for every other type.
     const language = resolveBackendLanguage(resourceType, options.language);
     if (resourceType === "frontend") {
-        for (const f of listFrontendFrameworks()) {
-            console.log(`${f.id}\t${f.label}\t${f.kind}\t${f.verified ? "verified" : "unverified"}\t${f.command}`);
-        }
+        printFrontendFrameworks();
         return;
     }
-    if (resourceType === "backend") {
-        for (const f of listBackendFrameworks(language?.id)) {
-            const compatibility = f.compatible
-                ? "compatible"
-                : `incompatible with --language ${language?.id}`;
-            console.log(`${f.id}\t${f.label}\t${f.languages.join(", ")}\t${compatibility}\t${f.command}`);
-        }
-        return;
+    for (const f of listBackendFrameworks(options.language)) {
+        // The compatibility cell names the language it is judged against, so it is never a bare
+        // "compatible" that could be read against a different language.
+        const compatibility = f.compatible
+            ? `compatible with ${language?.id}`
+            : `incompatible with --language ${language?.id}`;
+        console.log(`${f.id}\t${f.label}\t${f.languages.join(", ")}\t${compatibility}\t${f.command}`);
     }
-    throw new TdkError(`No frameworks are registered for --type ${resourceType}.`, [
-        "Use --type frontend or --type backend to list frameworks",
-        "Omit --type to list the frontend frameworks",
-    ]);
+}
+/** The historical frontend listing: id, display name, kind, verification, command. */
+function printFrontendFrameworks() {
+    for (const f of listFrontendFrameworks()) {
+        console.log(`${f.id}\t${f.label}\t${f.kind}\t${f.verified ? "verified" : "unverified"}\t${f.command}`);
+    }
 }
 export const resourceCommand = addYesOption(new Command("resource"))
     .description("Create a new resource (service) from scratch, or register an existing one")
