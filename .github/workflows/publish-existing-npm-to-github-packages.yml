@@ -86,6 +86,8 @@ jobs:
         run: |
           PREFIX="$RUNNER_TEMP/tdk-install"
           NPMRC="$RUNNER_TEMP/consumer.npmrc"
+          # npm must expand this environment reference when it reads the temporary config.
+          # shellcheck disable=SC2016
           printf '%s\n' '@tdk-landscape:registry=https://npm.pkg.github.com' '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' > "$NPMRC"
           NPM_CONFIG_USERCONFIG="$NPMRC" npm install --global --prefix "$PREFIX" "@tdk-landscape/tdk-cli-core@${VERSION}"
           INSTALLED_VERSION=$(PATH="$PREFIX/bin:$PATH" "$PREFIX/bin/tdk" --version)
