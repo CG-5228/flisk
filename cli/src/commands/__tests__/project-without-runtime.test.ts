@@ -87,7 +87,7 @@ let exitSpy: ReturnType<typeof vi.spyOn>;
 let logSpy: ReturnType<typeof vi.spyOn>;
 
 function output(): string {
-  return logSpy.mock.calls.map((call) => String(call[0])).join("\n");
+  return logSpy.mock.calls.map((call: unknown[]) => String(call[0])).join("\n");
 }
 
 beforeEach(() => {
