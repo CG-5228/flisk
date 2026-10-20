@@ -2,9 +2,39 @@
 
 ## 1. Audit the official landscape
 
-- [ ] 1.1 Start with `tdk-saas-starter`, `tdk-restaurant-example`, `tdk-example`, `tdk-cli-starter`, and `create-tdk-stack`, then inventory remaining public examples, starters, templates, and fixtures under `tdk-landscape`; record URL, activity, ecosystem, manifest, and lockfile.
+The repositories below are audit candidates, not yet-confirmed consumers. The suggested `devDependency` role applies only if the audit confirms that the repository genuinely installs or invokes the published npm package; do not add it solely to affect GitHub's count. Start with these candidates, then record ecosystem, manifest, lockfile, activity, and actual CLI usage for each.
+
+| Repository | URL | Why it belongs | Suggested disposition |
+|---|---|---|---|
+| `tdk-example` | https://github.com/tdk-landscape/tdk-example | Smallest official multi-service example | `devDependency` if genuine use is confirmed |
+| `tdk-saas-starter` | https://github.com/tdk-landscape/tdk-saas-starter | Polished SaaS dashboard + checkout starter | `devDependency` if genuine use is confirmed |
+| `tdk-restaurant-example` | https://github.com/tdk-landscape/tdk-restaurant-example | Restaurant ops example (reservations, kitchen, floor) | `devDependency` if genuine use is confirmed |
+| `tdk-user-management` | https://github.com/tdk-landscape/tdk-user-management | Enterprise identity / SCIM / OIDC example | `devDependency` if genuine use is confirmed |
+| `tdk-ecommerce-example` | https://github.com/tdk-landscape/tdk-ecommerce-example | Vue + Hono storefront example | `devDependency` if genuine use is confirmed |
+| `tdk-erp-system` | https://github.com/tdk-landscape/tdk-erp-system | 100-service scale fixture | `devDependency` if genuine use is confirmed |
+| `tdk-cli-starter` | https://github.com/tdk-landscape/tdk-cli-starter | Cloud-dev starter / template | `devDependency` if genuine use is confirmed |
+| `create-tdk-stack` | https://github.com/tdk-landscape/create-tdk-stack | Landing page / create-app style starter | `devDependency` if genuine use is confirmed |
+| `tdk-agent-stack` | https://github.com/tdk-landscape/tdk-agent-stack | AI agent + MCP + Postgres + NATS template | `devDependency` if genuine use is confirmed |
+| `tdk-auth-queue-email-example` | https://github.com/tdk-landscape/tdk-auth-queue-email-example | OIDC + NATS + Mailpit example | `devDependency` if genuine use is confirmed |
+| `tdk-thor-storefront` | https://github.com/tdk-landscape/tdk-thor-storefront | Thor Commerce storefront landscape | `devDependency` if genuine use is confirmed |
+| `tdk-person-crud-example` | https://github.com/tdk-landscape/tdk-person-crud-example | Person CRUD (React/Express/Mongo/Redis/RabbitMQ) | `devDependency` if genuine use is confirmed |
+| `vercel-store` | https://github.com/tdk-landscape/vercel-store | Vercel-style storefront landscape | `devDependency` if genuine use is confirmed |
+| `tdk-docker-compose-example` | https://github.com/tdk-landscape/tdk-docker-compose-example | CLI-in-Compose example | Audit; may be an exception |
+
+Secondary audit-only candidates, generally expected not to need a package declaration:
+
+- `tdk-skills` — agent skills catalog
+- `awesome-tdk-framework` — curated links
+- `tdk-website` / `tdk-landscape.github.io` — docs and install site
+- `tdk-demo-animation` — walkthrough assets
+- `tdk-cli-releases` — binary releases only
+- `tdk-service-definitions` — `service.json` registry
+- `tdk-import` / `tdk-app` — related tools; audit if they invoke the CLI as a package
+
+- [ ] 1.1 Audit the primary candidate repositories listed above; record URL, activity, ecosystem, manifest, lockfile, actual CLI usage, and disposition. Include additional public examples, starters, templates, and fixtures discovered under `tdk-landscape`.
 - [ ] 1.2 For each candidate, verify whether its workflow genuinely installs or uses `@tdk-landscape/tdk-cli-core` and identify the appropriate dependency role.
-- [ ] 1.3 Record exclusions and non-Node exceptions with reasons; do not add manifests solely to influence GitHub's count.
+- [ ] 1.3 Open one repository-specific PR for each confirmed npm-package consumer, adding the appropriate dependency (prefer `devDependencies` when used as a development/scaffolding tool) and updating its existing lockfile.
+- [ ] 1.4 Record exclusions and non-Node, binary-only, documentation-only, and CLI-in-Compose exceptions with reasons; do not add manifests solely to influence GitHub's count.
 
 ## 2. Verify package metadata
 
