@@ -10,6 +10,7 @@ Hard-won, repo-specific facts for anyone (human or agent) working here. Keep ent
 - BSD sed (macOS) has no `\b`; use python `re.sub` or perl for renames and confirm with `grep -c`.
 - A red test must be red for the right reason: temporarily remove the fix and read the failure. Common ways a test is red wrongly: a JS template literal evaluating `${...}`, JSON `true`/`null` pasted into Starlark (`True`/`None`), a too-narrow regex.
 - Do not leave `.skip` on a failing test; fix the code or the setup.
+- 2026-10-20 (#1736): a fish option completion offers its values after the flag only when the line carries `-r` (`complete -c tdk -f -n '...' -l type -r -a 'a b'`); without `-r` fish suggests nothing and without `-f` it also lists files. The stack names for the completions come from `tdk stacks --json`, because the human output prints them without the `  - ` prefix the old script grepped for (so it never matched).
 
 - 2026-10-08 (#88): In doctor-runtime tests on Windows, runHostCommand uses execFileSync instead of the injected exec callback; mock execFileSync or stub process.platform when a test needs to provide command output.
 

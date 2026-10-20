@@ -396,6 +396,8 @@ Runs a Model Context Protocol server over stdio for coding agents. No flags. See
 
 Generates tab completion for `bash`, `zsh`, `fish` and `powershell`. Without a shell argument, `tdk completion` uses the shell named in `$SHELL` when it is one of these four, and `bash` otherwise.
 
+The script is generated from the CLI itself: the command names, their flags, the resource types and the framework and language choices come from the registered commands and the registries, so the four shells always suggest the same commands and flags.
+
 | Flag | Effect |
 | --- | --- |
 | `[shell]`, `-s`, `--shell <shell>` | `bash`, `zsh`, `fish`, `powershell` |
@@ -403,6 +405,13 @@ Generates tab completion for `bash`, `zsh`, `fish` and `powershell`. Without a s
 | `--install` | Write the script to the shell's completion folder (PowerShell: add it to your profile) and print the line to add to your shell config |
 
 `--install` does not edit `~/.bashrc` or `~/.zshrc`. Run the shell's setup below, then open a new terminal.
+
+#### What the completions suggest
+
+- Every command the CLI registers, with its aliases (`tdk ls` for `tdk stacks`, `tdk traefik` for `tdk networks`).
+- The flags of the command you are on, for example `tdk doctor --<TAB>`.
+- The values of `--type` (the resource types), `--framework` (the frontend and backend frameworks) and `--language` (the backend languages).
+- The stacks and the resources of the current project, for `tdk up`, `tdk stack`, `tdk logs`, `tdk restart` and for `--stack`.
 
 #### bash
 
@@ -441,7 +450,7 @@ This writes `~/.config/fish/completions/tdk.fish`, which fish loads by itself. O
 tdk completion --shell powershell --install
 ```
 
-This adds a block marked `# TDK-CLI-COMPLETION-START` / `# TDK-CLI-COMPLETION-END` to your PowerShell profile (`Documents\PowerShell` for PowerShell 7, `Documents\WindowsPowerShell` otherwise). Close and reopen PowerShell. PowerShell completes the command names only; bash, zsh and fish also complete flags.
+This adds a block marked `# TDK-CLI-COMPLETION-START` / `# TDK-CLI-COMPLETION-END` to your PowerShell profile (`Documents\PowerShell` for PowerShell 7, `Documents\WindowsPowerShell` otherwise). Close and reopen PowerShell. PowerShell suggests the command names, the flags of the current command and the values of `--type`, `--framework` and `--language`.
 
 #### Check that it works
 
@@ -449,7 +458,13 @@ Type `tdk do` and press Tab. The shell should offer `doctor` and `down`. If noth
 
 #### After you upgrade
 
-Run the same `--install` command again after `tdk upgrade`. It overwrites the old file (PowerShell: it replaces the marked block), so the completions match the new version. Without `--install`, `tdk completion <shell> > <file>` or `--output <file>` writes the script wherever you want it, and you load it yourself.
+The completions are a copy of the CLI: a new command, a new flag or a new framework shows up only after the script is regenerated. Run the same `--install` command again after `tdk upgrade`:
+
+```bash
+tdk completion --shell bash --install   # or zsh, fish, powershell
+```
+
+It overwrites the old file (PowerShell: it replaces the marked block), so the completions match the new version. Without `--install`, `tdk completion <shell> > <file>` or `--output <file>` writes the script wherever you want it, and you load it yourself.
 
 ### `tdk maintainers check [file]`
 

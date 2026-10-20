@@ -1,264 +1,609 @@
 // Copyright (c) 2026 TDK Landscape contributors
 // SPDX-License-Identifier: MIT
+/**
+ * The shell completion scripts.
+ *
+ * The scripts are rendered from `commands/completion-candidates.ts`, which reads the registered
+ * commands, their flags and the framework, language and resource-type registries. A new command or
+ * a new registry entry therefore shows up in all four shells without editing a list here.
+ */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 import chalk from "chalk";
 import { Command } from "commander";
+import {
+  buildCompletionCandidates,
+  type CompletionCandidates,
+  type CompletionCommand,
+  type CompletionOption,
+  type CompletionPositional,
+} from "./completion-candidates.js";
 
-const BASH_COMPLETION = `# TDK CLI Bash Completion
+const SUPPORTED_SHELLS = ["bash", "zsh", "fish", "powershell"] as const;
+type SupportedShell = (typeof SUPPORTED_SHELLS)[number];
+
+/** A command with the path the user types it under (`config verify`). */
+interface CommandEntry {
+  /** The path the user types, for example `config verify`. */
+  path: string;
+  /** The word at this level. */
+  name: string;
+  /** The alternative words the CLI accepts. */
+  aliases: string[];
+  description: string;
+  options: CompletionOption[];
+  /** The sub-commands of this command. */
+  subcommands: CommandEntry[];
+  /** The path of the parent command, empty for a top-level command. */
+  parent: string;
+  /** What the command's positional argument completes. */
+  positional?: CompletionPositional;
+}
+
+function toEntries(commands: CompletionCommand[], parent = ""): CommandEntry[] {
+  return commands.map((command) => {
+    const path = parent ? `${parent} ${command.name}` : command.name;
+    return {
+      path,
+      name: command.name,
+      aliases: command.aliases,
+      description: command.description,
+      options: command.options,
+      subcommands: toEntries(command.subcommands, path),
+      parent,
+      ...(command.positional ? { positional: command.positional } : {}),
+    };
+  });
+}
+
+/** Every command and sub-command, flattened. */
+function flatten(entries: CommandEntry[]): CommandEntry[] {
+  return entries.flatMap((entry) => [entry, ...flatten(entry.subcommands)]);
+}
+
+/** The words that start a command: the name and every alias. */
+function commandWords(entries: CommandEntry[]): string[] {
+  return entries.flatMap((entry) => [entry.name, ...entry.aliases]);
+}
+
+/** A short description, without the characters the shell literals cannot hold. */
+function shortDescription(description: string): string {
+  const text = description.replace(/[[\]'":]/g, "").trim();
+  return text.length > 60 ? `${text.slice(0, 57)}...` : text;
+}
+
+function flagList(options: readonly CompletionOption[]): string {
+  return options.map((option) => option.flag).join(" ");
+}
+
+/** The stacks of the current project, read from the machine-readable CLI output. */
+const BASH_STACKS = `tdk stacks --json 2>/dev/null | grep -o '"name":"[^"]*"' | sed 's/"name":"//;s/"$//'`;
+const BASH_RESOURCES = `tdk resources --json 2>/dev/null | grep -o '"name":"[^"]*"' | sed 's/"name":"//;s/"$//'`;
+const FISH_STACKS = `tdk stacks --json 2>/dev/null | string match -a -r "\\"name\\":\\"[^\\"]*\\"" | string replace -r "\\"name\\":\\"([^\\"]*)\\"" "\\$1"`;
+const FISH_RESOURCES = `tdk resources --json 2>/dev/null | string match -a -r "\\"name\\":\\"[^\\"]*\\"" | string replace -r "\\"name\\":\\"([^\\"]*)\\"" "\\$1"`;
+
+function renderBash(candidates: CompletionCandidates): string {
+  const entries = toEntries(candidates.commands);
+  const words = commandWords(entries);
+  const globalFlags = flagList(candidates.globalOptions);
+
+  const aliasCases = entries
+    .flatMap((entry) => entry.aliases.map((alias) => `        ${alias}) cmd="${entry.name}" ;;`))
+    .join("\n");
+
+  const commandCases = entries
+    .filter((entry) => entry.options.length > 0)
+    .map((entry) => `            ${entry.name}) options="${flagList(entry.options)}" ;;`)
+    .join("\n");
+
+  const subCommandOptionCases = flatten(entries)
+    .filter((entry) => entry.parent !== "" && entry.options.length > 0)
+    .map((entry) => `                "${entry.path}") options="${flagList(entry.options)}" ;;`)
+    .join("\n");
+
+  const valueCases = Object.entries(candidates.values)
+    .map(
+      ([flag, values]) =>
+        `        ${flag})\n            COMPREPLY=( $(compgen -W "${values.join(" ")}" -- \${cur}) )\n            return 0\n            ;;`,
+    )
+    .join("\n");
+
+  const subCommandCases = entries
+    .filter((entry) => entry.subcommands.length > 0)
+    .map(
+      (entry) => `        ${entry.name}) words="${commandWords(entry.subcommands).join(" ")}" ;;`,
+    )
+    .join("\n");
+
+  const positionalCases = entries
+    .filter((entry) => entry.positional)
+    .map((entry) => {
+      switch (entry.positional) {
+        case "stacks":
+          return `        ${entry.name}) words="\${stacks}" ;;`;
+        case "resources":
+          return `        ${entry.name}) words="\${resources}" ;;`;
+        case "stacks-and-resources":
+          return `        ${entry.name}) words="\${stacks} \${resources}" ;;`;
+        case "commands":
+          return `        ${entry.name}) words="\${commands}" ;;`;
+        default:
+          return "";
+      }
+    })
+    .join("\n");
+
+  return `# TDK CLI Bash Completion
+# Generated by "tdk completion bash". The command and flag lists come from the CLI itself.
 _tdk_completions() {
-    local cur prev opts
+    local cur prev cmd sub options words commands stacks resources
     COMPREPLY=()
     cur="\${COMP_WORDS[COMP_CWORD]}"
     prev="\${COMP_WORDS[COMP_CWORD-1]}"
-    
-    # Main commands
-    local commands="project projects stack stacks resource resources agent restart up down status ui doctor runtime version completion help upgrade mcp logs eject import config maintainers networks traefik"
-    
-    # Options for specific commands
+    cmd="\${COMP_WORDS[1]}"
+    sub="\${COMP_WORDS[2]}"
+
+    commands="${words.join(" ")}"
+
+    # The stacks and the resources of the current project.
+    stacks="$(${BASH_STACKS})"
+    resources="$(${BASH_RESOURCES})"
+
+    # The values of the flags that take a fixed list.
     case "\${prev}" in
-        runtime)
-            COMPREPLY=( $(compgen -W "--check-assets --json" -- \${cur}) )
-            return 0
-            ;;
-        tdk)
-            COMPREPLY=( $(compgen -W "\${commands}" -- \${cur}) )
-            return 0
-            ;;
-        up)
-            # Complete with stack names and resource names
-            local stacks=$(tdk stacks 2>/dev/null | grep '^  -' | sed 's/^  - //' | awk '{print $1}')
-            local resources=$(tdk resources 2>/dev/null | grep -E '^[a-z0-9-]+' | awk '{print $1}')
-            COMPREPLY=( $(compgen -W "\${stacks} \${resources}" -- \${cur}) )
-            return 0
-            ;;
-        stack)
-            # Complete with existing stack names
-            local stacks=$(tdk stacks 2>/dev/null | grep '^  -' | sed 's/^  - //' | awk '{print $1}')
-            COMPREPLY=( $(compgen -W "\${stacks}" -- \${cur}) )
-            return 0
-            ;;
-        resource)
-            # Suggest common resource names or types
-            COMPREPLY=( $(compgen -W "api frontend backend worker --type --stack" -- \${cur}) )
-            return 0
-            ;;
-        --type)
-            COMPREPLY=( $(compgen -W "backend frontend worker mcp" -- \${cur}) )
-            return 0
-            ;;
+${valueCases}
         --stack)
-            local stacks=$(tdk stacks 2>/dev/null | grep '^  -' | sed 's/^  - //' | awk '{print $1}')
             COMPREPLY=( $(compgen -W "\${stacks}" -- \${cur}) )
+            return 0
+            ;;
+        --only)
+            COMPREPLY=( $(compgen -W "\${resources}" -- \${cur}) )
             return 0
             ;;
     esac
-    
-    # Global options
+
+    # The aliases are the same commands under a different name.
+    case "\${cmd}" in
+${aliasCases}
+    esac
+
+    # The flags of the current command.
     if [[ \${cur} == -* ]]; then
-        local options="--verbose --version --help --force --dry-run"
+        options="${globalFlags}"
+        case "\${cmd}" in
+${commandCases}
+        esac
+        if [[ -n "\${sub}" ]]; then
+            case "\${cmd} \${sub}" in
+${subCommandOptionCases}
+            esac
+        fi
         COMPREPLY=( $(compgen -W "\${options}" -- \${cur}) )
         return 0
     fi
+
+    # Inside a sub-command there is nothing left to suggest but its flags.
+    if [[ -n "\${sub}" ]]; then
+        return 0
+    fi
+
+    words="\${commands}"
+    case "\${cmd}" in
+${subCommandCases}
+${positionalCases}
+    esac
+
+    COMPREPLY=( $(compgen -W "\${words}" -- \${cur}) )
+    return 0
 }
 
 complete -F _tdk_completions tdk
 `;
+}
 
-const ZSH_COMPLETION = `#compdef tdk
+function renderZsh(candidates: CompletionCandidates): string {
+  const entries = toEntries(candidates.commands);
+  const globalFlags = candidates.globalOptions
+    .map((option) => `'${option.flag}[${shortDescription(option.description)}]'`)
+    .join(" \\\n        ");
+
+  const commandBranches = entries
+    .map((entry) => {
+      const specs = entry.options.map((option) => zshOptionSpec(option, candidates));
+
+      const positional = entry.positional ? [zshPositional(entry.positional)] : [];
+      const subcommandState = entry.subcommands.length > 0 ? [`'*:: :->${entry.name}_args'`] : [];
+      const all = [...specs, ...positional, ...subcommandState];
+      if (all.length === 0) return "";
+
+      return `        ${entry.name})\n            _arguments \\\n                ${all.join(" \\\n                ")}\n            ;;`;
+    })
+    .filter((branch) => branch !== "")
+    .join("\n");
+
+  const subCommandStates = entries
+    .filter((entry) => entry.subcommands.length > 0)
+    .map((entry) => {
+      const branches = entry.subcommands
+        .map((subcommand) => {
+          const specs = subcommand.options.map((option) => zshOptionSpec(option, candidates));
+          if (specs.length === 0) return "";
+          return `                ${subcommand.name})\n                    _arguments \\\n                        ${specs.join(" \\\n                        ")}\n                    ;;`;
+        })
+        .filter((branch) => branch !== "")
+        .join("\n");
+      return `        ${entry.name}_args)\n            case "$line[1]" in\n${branches}\n            esac\n            ;;`;
+    })
+    .join("\n");
+
+  const commandList = entries
+    .flatMap((entry) => [
+      `        '${entry.name}:${shortDescription(entry.description)}'`,
+      ...entry.aliases.map((alias) => `        '${alias}:${shortDescription(entry.description)}'`),
+    ])
+    .join("\n");
+
+  const subCommandLists = entries
+    .filter((entry) => entry.subcommands.length > 0)
+    .map(
+      (entry) =>
+        `_tdk_${entry.name}_subcommands() {\n    local commands=(\n${entry.subcommands
+          .map(
+            (subcommand) =>
+              `        '${subcommand.name}:${shortDescription(subcommand.description)}'`,
+          )
+          .join("\n")}\n    )\n    _describe -t commands '${entry.name} command' commands\n}`,
+    )
+    .join("\n\n");
+
+  return `#compdef tdk
 
 # TDK CLI Zsh Completion
+# Generated by "tdk completion zsh". The command and flag lists come from the CLI itself.
 
 _tdk() {
     local curcontext="$curcontext" state line
     typeset -A opt_args
-    
-    _arguments -C 
-        '(-h --help)'{-h,--help}'[Show help]' 
-        '(-v --version)'{-v,--version}'[Show version]' 
-        '--verbose[Enable verbose output]' 
-        '1: :_tdk_commands' 
+
+    _arguments -C \\
+        ${globalFlags} \\
+        '1: :_tdk_commands' \\
         '*:: :->args'
-    
+
     case "$line[1]" in
-        up)
-            _arguments 
-                '--verbose[Enable verbose output]'
-                '1: :_tdk_stacks_and_resources'
-            ;;
-        stack)
-            _arguments 
-                '--list[List resources without a stack]'
-                '1: :_tdk_stacks'
-            ;;
-        stacks)
-            _arguments 
-                '--services[Include resources in each stack]'
-            ;;
-        resource)
-            _arguments 
-                '--type[Resource type]:type:(backend frontend worker mcp)' 
-                '--stack[Assign to stack]:stack:_tdk_stacks' 
-                '1:resource name:'
-            ;;
-        resources)
-            _arguments 
-                '--stack[Filter by stack]:stack:_tdk_stacks' 
-                '--no-stack[Show unassigned only]' 
-                '--ports[Show port assignments]'
-            ;;
-        projects)
-            _arguments 
-                '--check[Validate master configs]'
-            ;;
-        doctor)
-            _arguments 
-                '--fix[Attempt to fix issues]'
-            ;;
-        runtime)
-            _arguments
-                '--check-assets[Check bundled engine and template assets]'
-                '--json[Print the check result as JSON]'
-            ;;
-        upgrade)
-            _arguments
-                '--force[Force upgrade even if on latest]'
-                '--all[Upgrade every TDK installation found on PATH]'
-                '--dry-run[Show what would be upgraded]'
-            ;;
+${commandBranches}
+    esac
+
+    case "$state" in
+${subCommandStates}
     esac
 }
 
 _tdk_commands() {
     local commands=(
-        'project:Initialize project with master configs'
-        'projects:Show project information'
-        'stack:Organize resources into stacks'
-        'stacks:List all stacks'
-        'resource:Create new resource'
-        'resources:List all resources'
-        'agent:Inspect and operate AI agent resources'
-        'restart:Restart a running resource in the stack'
-        'up:Start services'
-        'down:Stop all services'
-        'status:Show resource status'
-        'ui:Open interactive UI'
-        'doctor:Check environment'
-        'runtime:Inspect packaged runtime assets'
-        'version:Show version'
-        'upgrade:Upgrade TDK CLI'
-        'completion:Generate shell completions'
-        'mcp:Run a Model Context Protocol server over stdio for coding agents'
-        'logs:Print a bounded snapshot of recent logs from the running stack'
-        'eject:Take ownership of the generated Tilt and Docker files'
-        'import:Import the services a directory describes (runs tdk-import)'
-        'config:Manage project configuration and regenerate master files'
-        'maintainers:Maintainer file checks'
-        'networks:Show Traefik-routed URLs for all services'
-        'traefik:Show Traefik-routed URLs for all services'
-        'help:Show help'
+${commandList}
     )
     _describe -t commands 'tdk command' commands
 }
 
 _tdk_stacks() {
     local stacks
-    stacks=($(tdk stacks 2>/dev/null | grep '^  -' | sed 's/^  - //' | awk '{print $1}'))
+    stacks=($(tdk stacks --json 2>/dev/null | grep -o '"name":"[^"]*"' | sed 's/"name":"//;s/"$//'))
     _describe -t stacks 'stack' stacks
 }
 
 _tdk_resources() {
     local resources
-    resources=($(tdk resources 2>/dev/null | grep -E '^[a-z0-9-]+' | awk '{print $1}'))
+    resources=($(tdk resources --json 2>/dev/null | grep -o '"name":"[^"]*"' | sed 's/"name":"//;s/"$//'))
     _describe -t resources 'resource' resources
 }
 
-_tdk_stacks_and_resources() {
-    _tdk_stacks
-    _tdk_resources
-}
-
+${subCommandLists}
 compdef _tdk tdk
 `;
+}
 
-const FISH_COMPLETION = `# TDK CLI Fish Completion
+/** The `_arguments` spec of one flag, with the values it completes when it has them. */
+function zshOptionSpec(option: CompletionOption, candidates: CompletionCandidates): string {
+  const description = shortDescription(option.description);
+  const values = candidates.values[option.flag];
+  if (values) {
+    return `'${option.flag}[${description}]:${option.flag.slice(2)}:(${values.join(" ")})'`;
+  }
+  if (option.flag === "--stack") {
+    return `'${option.flag}[${description}]:stack:_tdk_stacks'`;
+  }
+  if (option.flag === "--only") {
+    return `'${option.flag}[${description}]:service:_tdk_resources'`;
+  }
+  return option.takesValue
+    ? `'${option.flag}[${description}]:${option.flag.slice(2)}:'`
+    : `'${option.flag}[${description}]'`;
+}
+
+function zshPositional(positional: string): string {
+  switch (positional) {
+    case "stacks":
+      return "'1:stack:_tdk_stacks'";
+    case "resources":
+      return "'1:resource:_tdk_resources'";
+    case "stacks-and-resources":
+      return "'1:target:_tdk_stacks'";
+    case "commands":
+      return "'1:command:_tdk_commands'";
+    default:
+      return "'1: :'";
+  }
+}
+
+function renderFish(candidates: CompletionCandidates): string {
+  const entries = toEntries(candidates.commands);
+
+  const commandLines = entries.map(
+    (entry) =>
+      `complete -c tdk -f -n '__fish_use_subcommand' -a '${entry.name}' -d '${shortDescription(entry.description)}'`,
+  );
+
+  const aliasLines = entries.flatMap((entry) =>
+    entry.aliases.map(
+      (alias) =>
+        `complete -c tdk -f -n '__fish_use_subcommand' -a '${alias}' -d '${shortDescription(entry.description)}'`,
+    ),
+  );
+
+  const subCommandLines = entries.flatMap((entry) =>
+    entry.subcommands.map(
+      (subcommand) =>
+        `complete -c tdk -f -n '__fish_seen_subcommand_from ${entry.name}' -a '${subcommand.name}' -d '${shortDescription(subcommand.description)}'`,
+    ),
+  );
+
+  const optionLines = flatten(entries)
+    .map((entry) => {
+      const condition =
+        entry.parent === ""
+          ? `__fish_seen_subcommand_from ${entry.name}`
+          : `__fish_seen_subcommand_from ${entry.parent}; and __fish_seen_subcommand_from ${entry.name}`;
+      return entry.options
+        .filter((option) => option.flag !== "--stack" && option.flag !== "--only")
+        .map((option) => {
+          const values = candidates.values[option.flag];
+          // `-r` tells fish that the flag takes a value, so it offers the values after it.
+          const args = values ? ` -r -a '${values.join(" ")}'` : "";
+          return `complete -c tdk -f -n '${condition}' -l ${option.flag.slice(2)} -d '${shortDescription(option.description)}'${args}`;
+        })
+        .join("\n");
+    })
+    .filter((line) => line !== "");
+
+  // The flags whose values come from the current project.
+  const projectFlagLines = flatten(entries).flatMap((entry) => {
+    const condition =
+      entry.parent === ""
+        ? `__fish_seen_subcommand_from ${entry.name}`
+        : `__fish_seen_subcommand_from ${entry.parent}; and __fish_seen_subcommand_from ${entry.name}`;
+    return entry.options
+      .filter((option) => option.flag === "--stack" || option.flag === "--only")
+      .map((option) => {
+        const values = option.flag === "--stack" ? `(${FISH_STACKS})` : `(${FISH_RESOURCES})`;
+        return `complete -c tdk -f -n '${condition}' -l ${option.flag.slice(2)} -r -d '${shortDescription(option.description)}' -a '${values}'`;
+      });
+  });
+
+  const globalLines = candidates.globalOptions.map(
+    (option) =>
+      `complete -c tdk -f -l ${option.flag.slice(2)} -d '${shortDescription(option.description)}'`,
+  );
+
+  const stackLines = entries
+    .filter((entry) => entry.positional === "stacks" || entry.positional === "stacks-and-resources")
+    .map(
+      (entry) =>
+        `complete -c tdk -f -n '__fish_seen_subcommand_from ${entry.name}' -a '(${FISH_STACKS})'`,
+    );
+
+  const resourceLines = entries
+    .filter(
+      (entry) => entry.positional === "resources" || entry.positional === "stacks-and-resources",
+    )
+    .map(
+      (entry) =>
+        `complete -c tdk -f -n '__fish_seen_subcommand_from ${entry.name}' -a '(${FISH_RESOURCES})'`,
+    );
+
+  return `# TDK CLI Fish Completion
+# Generated by "tdk completion fish". The command and flag lists come from the CLI itself.
 
 # Disable file completions for most commands
 complete -c tdk -f
 
-# Main commands
-complete -c tdk -n '__fish_use_subcommand' -a 'project' -d 'Initialize project with master configs'
-complete -c tdk -n '__fish_use_subcommand' -a 'projects' -d 'Show project information'
-complete -c tdk -n '__fish_use_subcommand' -a 'stack' -d 'Organize resources into stacks'
-complete -c tdk -n '__fish_use_subcommand' -a 'stacks' -d 'List all stacks'
-complete -c tdk -n '__fish_use_subcommand' -a 'resource' -d 'Create new resource'
-complete -c tdk -n '__fish_use_subcommand' -a 'resources' -d 'List all resources'
-complete -c tdk -n '__fish_use_subcommand' -a 'agent' -d 'Inspect and operate AI agent resources'
-complete -c tdk -n '__fish_use_subcommand' -a 'restart' -d 'Restart a running resource in the stack'
-complete -c tdk -n '__fish_use_subcommand' -a 'up' -d 'Start services'
-complete -c tdk -n '__fish_use_subcommand' -a 'down' -d 'Stop all services'
-complete -c tdk -n '__fish_use_subcommand' -a 'status' -d 'Show resource status'
-complete -c tdk -n '__fish_use_subcommand' -a 'ui' -d 'Open interactive UI'
-complete -c tdk -n '__fish_use_subcommand' -a 'doctor' -d 'Check environment'
-complete -c tdk -n '__fish_use_subcommand' -a 'runtime' -d 'Inspect packaged runtime assets'
-complete -c tdk -n '__fish_use_subcommand' -a 'version' -d 'Show version'
-complete -c tdk -n '__fish_use_subcommand' -a 'upgrade' -d 'Upgrade TDK CLI'
-complete -c tdk -n '__fish_use_subcommand' -a 'completion' -d 'Generate shell completions'
-complete -c tdk -n '__fish_use_subcommand' -a 'mcp' -d 'Run a Model Context Protocol server over stdio for coding agents'
-complete -c tdk -n '__fish_use_subcommand' -a 'logs' -d 'Print a bounded snapshot of recent logs from the running stack'
-complete -c tdk -n '__fish_use_subcommand' -a 'eject' -d 'Take ownership of the generated Tilt and Docker files'
-complete -c tdk -n '__fish_use_subcommand' -a 'import' -d 'Import the services a directory describes (runs tdk-import)'
-complete -c tdk -n '__fish_use_subcommand' -a 'config' -d 'Manage project configuration and regenerate master files'
-complete -c tdk -n '__fish_use_subcommand' -a 'maintainers' -d 'Maintainer file checks'
-complete -c tdk -n '__fish_use_subcommand' -a 'networks' -d 'Show Traefik-routed URLs for all services'
-complete -c tdk -n '__fish_use_subcommand' -a 'traefik' -d 'Show Traefik-routed URLs for all services'
-complete -c tdk -n '__fish_use_subcommand' -a 'help' -d 'Show help'
+# Commands
+${commandLines.join("\n")}
+
+# Command aliases
+${aliasLines.join("\n")}
+
+# Sub-commands
+${subCommandLines.join("\n")}
 
 # Global options
-complete -c tdk -s h -l help -d 'Show help'
-complete -c tdk -s v -l version -d 'Show version'
-complete -c tdk -l verbose -d 'Enable verbose output'
+${globalLines.join("\n")}
 
-# Command-specific completions
-# resource command options
-complete -c tdk -n '__fish_seen_subcommand_from resource' -l type -d 'Resource type' -a 'backend frontend worker mcp'
-complete -c tdk -n '__fish_seen_subcommand_from resource' -l stack -d 'Assign to stack' -a '(tdk stacks 2>/dev/null | string match -r "^  - " | string replace "  - " "")'
+# Command options
+${optionLines.join("\n")}
 
-# resources command options
-complete -c tdk -n '__fish_seen_subcommand_from resources' -l stack -d 'Filter by stack' -a '(tdk stacks 2>/dev/null | string match -r "^  - " | string replace "  - " "")'
-complete -c tdk -n '__fish_seen_subcommand_from resources' -l no-stack -d 'Show unassigned only'
-complete -c tdk -n '__fish_seen_subcommand_from resources' -l ports -d 'Show port assignments'
+# Flags whose values come from the current project
+${projectFlagLines.join("\n")}
 
-# stack command options
-complete -c tdk -n '__fish_seen_subcommand_from stack' -l list -d 'List resources without a stack'
-
-# stacks command options
-complete -c tdk -n '__fish_seen_subcommand_from stacks' -l services -d 'Include resources in each stack'
-
-# projects command options
-complete -c tdk -n '__fish_seen_subcommand_from projects' -l check -d 'Validate master configs'
-
-# up command completions
-complete -c tdk -n '__fish_seen_subcommand_from up' -a '(tdk stacks 2>/dev/null | string match -r "^  - " | string replace "  - " "")'
-complete -c tdk -n '__fish_seen_subcommand_from up' -a '(tdk resources 2>/dev/null | string match -r "^[a-z0-9-]+")'
-
-# doctor command options
-complete -c tdk -n '__fish_seen_subcommand_from doctor' -l fix -d 'Attempt to fix issues'
-complete -c tdk -n '__fish_seen_subcommand_from runtime' -l check-assets -d 'Check bundled engine and template assets'
-complete -c tdk -n '__fish_seen_subcommand_from runtime' -l json -d 'Print the check result as JSON'
-
-# upgrade command options
-complete -c tdk -n '__fish_seen_subcommand_from upgrade' -l force -d 'Force upgrade even if on latest'
-complete -c tdk -n '__fish_seen_subcommand_from upgrade' -l all -d 'Upgrade every TDK installation found on PATH'
-complete -c tdk -n '__fish_seen_subcommand_from upgrade' -l dry-run -d 'Show what would be upgraded'
+# Project values
+${[...stackLines, ...resourceLines].join("\n")}
 `;
+}
 
-const POWERSHELL_COMPLETION = `Register-ArgumentCompleter -Native -CommandName tdk -ScriptBlock {
-  param($wordToComplete)
-  $cmds = @('up','down','doctor','project','resource','stacks','status','networks','upgrade','runtime','version','ui','config')
-  $cmds | Where-Object { $_ -like "$wordToComplete*" }
+function renderPowerShell(candidates: CompletionCandidates): string {
+  const entries = toEntries(candidates.commands);
+
+  const commandLines = entries.map(
+    (entry) => `    '${entry.name}' = '${shortDescription(entry.description)}'`,
+  );
+
+  const aliasDescriptionLines = entries.flatMap((entry) =>
+    entry.aliases.map((alias) => `    '${alias}' = '${shortDescription(entry.description)}'`),
+  );
+
+  const subCommandLines = entries.flatMap((entry) =>
+    entry.subcommands.map(
+      (subcommand) =>
+        `    '${entry.name} ${subcommand.name}' = '${shortDescription(subcommand.description)}'`,
+    ),
+  );
+
+  const optionLines = flatten(entries).map((entry) => {
+    const flags = entry.options.map((option) => `'${option.flag}'`).join(", ");
+    return `    '${entry.path}' = @(${flags})`;
+  });
+
+  const valueLines = Object.entries(candidates.values).map(
+    ([flag, values]) => `    '${flag}' = @(${values.map((value) => `'${value}'`).join(", ")})`,
+  );
+
+  const globalLines = candidates.globalOptions.map((option) => `'${option.flag}'`).join(", ");
+
+  const positionalLines = entries
+    .filter((entry) => entry.positional)
+    .map((entry) => {
+      switch (entry.positional) {
+        case "stacks":
+          return `    '${entry.name}' = 'stacks'`;
+        case "resources":
+          return `    '${entry.name}' = 'resources'`;
+        case "stacks-and-resources":
+          return `    '${entry.name}' = 'stacks-and-resources'`;
+        case "commands":
+          return `    '${entry.name}' = 'commands'`;
+        default:
+          return "";
+      }
+    })
+    .filter((line) => line !== "");
+
+  const aliasLines = entries.flatMap((entry) =>
+    entry.aliases.map((alias) => `    '${alias}' = '${entry.name}'`),
+  );
+
+  return `Register-ArgumentCompleter -Native -CommandName tdk -ScriptBlock {
+  param($wordToComplete, $commandAst, $cursorPosition)
+
+  # Generated by "tdk completion powershell". The command and flag lists come from the CLI itself.
+  $commands = [ordered]@{
+${commandLines.join("\n")}
+${aliasDescriptionLines.join("\n")}
+  }
+
+  $aliases = [ordered]@{
+${aliasLines.join("\n")}
+  }
+
+  $subcommands = [ordered]@{
+${subCommandLines.join("\n")}
+  }
+
+  $commandOptions = [ordered]@{
+${optionLines.join("\n")}
+  }
+
+  $optionValues = [ordered]@{
+${valueLines.join("\n")}
+  }
+
+  $positional = [ordered]@{
+${positionalLines.join("\n")}
+  }
+
+  $globalOptions = @(${globalLines})
+
+  $tokens = @()
+  foreach ($element in $commandAst.CommandElements) { $tokens += $element.Extent.Text }
+
+  # The words the user already typed, without the command name.
+  $typed = @()
+  if ($tokens.Count -gt 1) { $typed = $tokens[1..($tokens.Count - 1)] }
+
+  $previous = ''
+  if ($typed.Count -ge 2 -and $wordToComplete -ne '') { $previous = $typed[$typed.Count - 2] }
+  elseif ($typed.Count -ge 1) { $previous = $typed[$typed.Count - 1] }
+
+  # The command path the cursor is in, for example "config verify".
+  $path = @()
+  foreach ($token in $typed) {
+    if ($token -like '-*') { continue }
+    $name = $token
+    if ($aliases.Contains($name)) { $name = $aliases[$name] }
+    if ($path.Count -eq 0 -and $commands.Contains($name)) { $path += $name; continue }
+    if ($path.Count -eq 1 -and $subcommands.Contains(($path[0] + ' ' + $name))) { $path += $name }
+  }
+  $commandPath = $path -join ' '
+
+  # The value of the flag before the cursor.
+  if ($optionValues.Contains($previous)) {
+    return $optionValues[$previous] | Where-Object { $_ -like "$wordToComplete*" }
+  }
+
+  # The flags of the current command.
+  if ($wordToComplete -like '-*') {
+    $flags = $globalOptions
+    if ($commandPath -ne '' -and $commandOptions.Contains($commandPath)) {
+      $flags = $flags + $commandOptions[$commandPath]
+    }
+    return $flags | Where-Object { $_ -like "$wordToComplete*" } | Sort-Object -Unique
+  }
+
+  # The sub-command names of the current command.
+  if ($commandPath -ne '') {
+    $names = @()
+    foreach ($key in $subcommands.Keys) {
+      if ($key.StartsWith($commandPath + ' ')) { $names += $key.Split(' ')[-1] }
+    }
+    if ($names.Count -gt 0) { return $names | Where-Object { $_ -like "$wordToComplete*" } }
+  }
+
+  # The project values of the positional argument.
+  if ($positional.Contains($commandPath)) {
+    $stacks = @()
+    $resources = @()
+    try { $stacks = (tdk stacks --json | ConvertFrom-Json).data.stacks.name } catch { }
+    try { $resources = (tdk resources --json | ConvertFrom-Json).data.resources.name } catch { }
+    switch ($positional[$commandPath]) {
+      'stacks' { return $stacks | Where-Object { $_ -like "$wordToComplete*" } }
+      'resources' { return $resources | Where-Object { $_ -like "$wordToComplete*" } }
+      'stacks-and-resources' { return ($stacks + $resources) | Where-Object { $_ -like "$wordToComplete*" } }
+      'commands' { return $commands.Keys | Where-Object { $_ -like "$wordToComplete*" } }
+    }
+  }
+
+  # The command names.
+  return $commands.Keys | Where-Object { $_ -like "$wordToComplete*" }
 }`;
+}
+
+/** Renders the completion script of one shell. */
+export function renderCompletionScript(
+  shell: SupportedShell,
+  candidates: CompletionCandidates,
+): string {
+  switch (shell) {
+    case "bash":
+      return renderBash(candidates);
+    case "zsh":
+      return renderZsh(candidates);
+    case "fish":
+      return renderFish(candidates);
+    case "powershell":
+      return renderPowerShell(candidates);
+  }
+}
+
 const POWERSHELL_START = "# TDK-CLI-COMPLETION-START";
 const POWERSHELL_END = "# TDK-CLI-COMPLETION-END";
 
@@ -268,44 +613,44 @@ export const completionCommand = new Command("completion")
   .option("-s, --shell <shell>", "Target shell (bash, zsh, fish, powershell)")
   .option("-o, --output <path>", "Output file path (default: stdout)")
   .option("--install", "Install to shell config automatically")
-  .action((shellArgument, options) => {
+  .action((shellArgument, options, command) => {
     const requestedShell = options.shell ?? shellArgument;
     const environmentShell = basename(process.env.SHELL ?? "")
       .replace(/\.exe$/i, "")
       .toLowerCase();
-    const supportedShells = ["bash", "zsh", "fish", "powershell"];
-    const defaultShell = supportedShells.includes(environmentShell) ? environmentShell : "bash";
+    const defaultShell = SUPPORTED_SHELLS.includes(environmentShell as SupportedShell)
+      ? (environmentShell as SupportedShell)
+      : "bash";
     const shell = (requestedShell ?? defaultShell).toLowerCase();
 
     if (requestedShell === undefined) {
       console.error(chalk.gray(`Using ${shell} completion`));
     }
 
-    let completionScript: string;
-    let filename: string;
-
-    switch (shell) {
-      case "bash":
-        completionScript = BASH_COMPLETION;
-        filename = "tdk-completion.bash";
-        break;
-      case "zsh":
-        completionScript = ZSH_COMPLETION;
-        filename = "_tdk";
-        break;
-      case "fish":
-        completionScript = FISH_COMPLETION;
-        filename = "tdk.fish";
-        break;
-      case "powershell":
-        completionScript = `${POWERSHELL_START}\n${POWERSHELL_COMPLETION}\n${POWERSHELL_END}`;
-        filename = "Microsoft.PowerShell_profile.ps1";
-        break;
-      default:
-        console.error(chalk.red(`❌ Unsupported shell: ${shell}`));
-        console.log(chalk.gray("Supported shells: bash, zsh, fish, powershell"));
-        process.exit(1);
+    if (!SUPPORTED_SHELLS.includes(shell as SupportedShell)) {
+      console.error(chalk.red(`❌ Unsupported shell: ${shell}`));
+      console.log(chalk.gray("Supported shells: bash, zsh, fish, powershell"));
+      process.exit(1);
     }
+
+    // The candidates come from the program this command is registered on, so the completions and
+    // the CLI always offer the same commands and flags.
+    const program = command.parent;
+    if (!program) {
+      console.error(chalk.red("❌ The completion command must be registered on the tdk program."));
+      process.exit(1);
+    }
+
+    const candidates = buildCompletionCandidates(program);
+    const completionScript = renderCompletionScript(shell as SupportedShell, candidates);
+    const filename =
+      shell === "bash"
+        ? "tdk-completion.bash"
+        : shell === "zsh"
+          ? "_tdk"
+          : shell === "fish"
+            ? "tdk.fish"
+            : "Microsoft.PowerShell_profile.ps1";
 
     if (options.install) {
       const home = homedir();
@@ -322,7 +667,7 @@ export const completionCommand = new Command("completion")
           installPath = join(profileDir, filename);
           mkdirSync(profileDir, { recursive: true });
           const existing = existsSync(installPath) ? readFileSync(installPath, "utf-8") : "";
-          const block = `${POWERSHELL_START}\n${POWERSHELL_COMPLETION}\n${POWERSHELL_END}`;
+          const block = `${POWERSHELL_START}\n${completionScript}\n${POWERSHELL_END}`;
           const markerPattern = new RegExp(`${POWERSHELL_START}[\\s\\S]*?${POWERSHELL_END}`, "m");
           const updated = markerPattern.test(existing)
             ? existing.replace(markerPattern, block)
