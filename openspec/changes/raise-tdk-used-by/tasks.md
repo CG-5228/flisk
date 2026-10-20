@@ -60,3 +60,10 @@ Secondary audit-only candidates, generally expected not to need a package declar
 - [ ] 5.2 After consumer changes merge, re-check GitHub's dependency graph/dependents view and record the date and observed count.
 - [ ] 5.3 Record any processing delay or display limitation; do not create artificial dependencies to reach a target number.
 - [ ] 5.4 Confirm adopter documentation and package metadata are published and discoverable.
+
+## Optional: GitHub Packages visibility
+
+This is independent of npm dependency-graph recognition and the “Used by” count. The CLI is published to the public npm registry; an empty GitHub Packages tab does not block npm-based dependents from appearing.
+
+- [ ] O.1 Decide whether to also publish `@tdk-landscape/tdk-cli-core` to GitHub Packages (`npm.pkg.github.com`) in addition to npmjs.com.
+- [ ] O.2 If approved, configure the GitHub Packages registry and authenticated release workflow, publish a version, and connect the package to `tdk-landscape/tdk-cli-core` so it appears on the repository's Packages tab.
