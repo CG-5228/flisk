@@ -17,13 +17,7 @@ The project should make legitimate package usage in its official landscape visib
 
 ## Capabilities
 
-### New Capabilities
-
-- `used-by-growth`: Official repositories that genuinely use TDK declare the published CLI package, and adopter documentation explains how to make real package usage discoverable in GitHub's dependency graph.
-
-### Modified Capabilities
-
-None.
+None. This is a planning-only change; it does not introduce or modify a product capability.
 
 ## Impact
 

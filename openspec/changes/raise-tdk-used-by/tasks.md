@@ -2,7 +2,7 @@
 
 ## 1. Audit the official landscape
 
-- [ ] 1.1 Inventory public examples, starters, templates, and fixtures under `tdk-landscape`; record URL, activity, ecosystem, manifest, and lockfile.
+- [ ] 1.1 Start with `tdk-saas-starter`, `tdk-restaurant-example`, `tdk-example`, `tdk-cli-starter`, and `create-tdk-stack`, then inventory remaining public examples, starters, templates, and fixtures under `tdk-landscape`; record URL, activity, ecosystem, manifest, and lockfile.
 - [ ] 1.2 For each candidate, verify whether its workflow genuinely installs or uses `@tdk-landscape/tdk-cli-core` and identify the appropriate dependency role.
 - [ ] 1.3 Record exclusions and non-Node exceptions with reasons; do not add manifests solely to influence GitHub's count.
 
