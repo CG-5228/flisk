@@ -75,5 +75,10 @@ export declare function readOnlySmokePlans(plans: SmokePlan[], options?: {
 /** Runs the steps in order. A not-ready answer (connection error, 404, 502-504) is retried until the timeout; a real wrong answer fails at once. */
 export declare function runSmokePlan(plan: SmokePlan, deps?: SmokeDeps): Promise<SmokeResult>;
 export declare function formatSmokeFailure(result: SmokeResult): string;
+/**
+ * The dependencies that keep smoke text safe: the project's own secret values are masked before anything is shown or stored.
+ * Both `tdk up` and `tdk doctor` use them, so neither prints a body that holds a secret.
+ */
+export declare function safeSmokeDeps(projectRoot: string, warn?: (message: string) => void): Pick<SmokeDeps, "redact" | "warn">;
 /** Runs every plan side by side; each plan keeps its own timeout. */
 export declare function runSmokePlans(plans: SmokePlan[], deps?: SmokeDeps): Promise<SmokeResult[]>;

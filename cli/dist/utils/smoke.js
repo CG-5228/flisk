@@ -4,6 +4,7 @@ import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { BRING_YOUR_OWN_TYPE } from "./constants.js";
 import { isApiServiceType } from "./resource-kind.js";
+import { createEnvRedactor } from "./secret-redaction.js";
 import { resolveServicePath, resolveSubdomainBases } from "./service-urls.js";
 export const DEFAULT_SMOKE_TIMEOUT_SECONDS = 60;
 const RETRY_DELAY_MS = 1000;
@@ -383,6 +384,16 @@ export async function runSmokePlan(plan, deps = {}) {
 }
 export function formatSmokeFailure(result) {
     return `Smoke check failed: ${result.failure}${result.recordPath ? ` (record: ${result.recordPath})` : ""}`;
+}
+/**
+ * The dependencies that keep smoke text safe: the project's own secret values are masked before anything is shown or stored.
+ * Both `tdk up` and `tdk doctor` use them, so neither prints a body that holds a secret.
+ */
+export function safeSmokeDeps(projectRoot, warn) {
+    return {
+        redact: createEnvRedactor(projectRoot),
+        ...(warn ? { warn } : {}),
+    };
 }
 /** Runs every plan side by side; each plan keeps its own timeout. */
 export async function runSmokePlans(plans, deps = {}) {

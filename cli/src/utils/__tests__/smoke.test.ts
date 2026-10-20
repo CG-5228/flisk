@@ -1,6 +1,6 @@
 // Copyright (c) 2026 TDK Landscape contributors
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -13,6 +13,7 @@ import {
   SMOKE_RECORD_BODY_MAX_BYTES,
   type SmokeConfig,
   type SmokePlan,
+  safeSmokeDeps,
   validateSmoke,
 } from "../smoke.js";
 
@@ -631,6 +632,41 @@ describe("smoke redaction", () => {
     expect(result.ok).toBe(false);
     expect(result.failure).not.toContain(SECRET);
     expect(warnings.length).toBeGreaterThan(0);
+  });
+});
+
+describe("safeSmokeDeps", () => {
+  const dirs: string[] = [];
+  afterEach(() => {
+    for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true });
+  });
+  const projectWithEnv = (content: string | undefined) => {
+    const d = mkdtempSync(join(tmpdir(), "smoke-safe-"));
+    dirs.push(d);
+    if (content !== undefined) writeFileSync(join(d, ".env"), content);
+    return d;
+  };
+
+  it("masks the project's own secret values", () => {
+    const deps = safeSmokeDeps(projectWithEnv("TOKEN=supersecrettoken\n"));
+    expect(deps.redact?.("bearer supersecrettoken")).toBe("bearer [REDACTED]");
+  });
+
+  it("throws when the .env exists but cannot be read, so no raw text is shown or stored", () => {
+    const dir = projectWithEnv("TOKEN=supersecrettoken\n");
+    chmodSync(join(dir, ".env"), 0o000);
+    try {
+      expect(() => safeSmokeDeps(dir).redact?.("bearer supersecrettoken")).toThrow();
+    } finally {
+      chmodSync(join(dir, ".env"), 0o600);
+    }
+  });
+
+  it("passes the warning hook through", () => {
+    const warnings: string[] = [];
+    const deps = safeSmokeDeps(projectWithEnv(undefined), (message) => warnings.push(message));
+    deps.warn?.("something");
+    expect(warnings).toEqual(["something"]);
   });
 });
 

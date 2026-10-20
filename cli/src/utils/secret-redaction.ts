@@ -62,16 +62,16 @@ export function redactValue<T>(value: T, secrets: readonly string[]): T {
 
 /**
  * A redactor for text that may hold the project's own secrets. When the project's .env exists but cannot be read, the values
- * are unknown, so the redactor throws instead of guessing: the caller then shows and stores nothing rather than raw text.
+ * are unknown, so the redactor throws instead of guessing: the caller then shows and stores nothing rather than raw text. The
+ * original error is kept, so a caller can still tell an unreadable .env from another failure.
  */
 export function createEnvRedactor(projectRoot: string): (text: string) => string {
   let secrets: string[];
   try {
     secrets = envSecretValues(projectRoot);
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
     return () => {
-      throw new Error(`${reason}; the text cannot be masked safely`);
+      throw error;
     };
   }
   return (text: string) => redactSecrets(text, secrets);

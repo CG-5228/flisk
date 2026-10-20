@@ -160,7 +160,8 @@ describe("createEnvRedactor", () => {
     const root = projectWithEnv("TOKEN=abcdefghijk\n");
     fs.chmodSync(join(root, ".env"), 0o000);
     try {
-      expect(() => createEnvRedactor(root)("some text")).toThrow(/cannot be masked safely/);
+      // The original error is kept, so a caller can still tell an unreadable .env from another failure.
+      expect(() => createEnvRedactor(root)("some text")).toThrow(EnvUnreadableError);
     } finally {
       fs.chmodSync(join(root, ".env"), 0o600);
     }

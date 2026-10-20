@@ -6,6 +6,7 @@ import { join } from "node:path";
 import type { DiscoveredResource } from "../types/index.js";
 import { BRING_YOUR_OWN_TYPE } from "./constants.js";
 import { isApiServiceType } from "./resource-kind.js";
+import { createEnvRedactor } from "./secret-redaction.js";
 import { resolveServicePath, resolveSubdomainBases } from "./service-urls.js";
 
 /**
@@ -502,6 +503,20 @@ export async function runSmokePlan(plan: SmokePlan, deps: SmokeDeps = {}): Promi
 
 export function formatSmokeFailure(result: SmokeResult): string {
   return `Smoke check failed: ${result.failure}${result.recordPath ? ` (record: ${result.recordPath})` : ""}`;
+}
+
+/**
+ * The dependencies that keep smoke text safe: the project's own secret values are masked before anything is shown or stored.
+ * Both `tdk up` and `tdk doctor` use them, so neither prints a body that holds a secret.
+ */
+export function safeSmokeDeps(
+  projectRoot: string,
+  warn?: (message: string) => void,
+): Pick<SmokeDeps, "redact" | "warn"> {
+  return {
+    redact: createEnvRedactor(projectRoot),
+    ...(warn ? { warn } : {}),
+  };
 }
 
 /** Runs every plan side by side; each plan keeps its own timeout. */

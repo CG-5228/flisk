@@ -45,7 +45,6 @@ import { findAvailablePort } from "../utils/port-assignment.js";
 import { formatPortFallbackNotice } from "../utils/port-fallback-notice.js";
 import { isApiServiceType } from "../utils/resource-kind.js";
 import { enforceSchemaVersionGate } from "../utils/schema-version-gate.js";
-import { createEnvRedactor } from "../utils/secret-redaction.js";
 import { enforceServiceConfigGate, warnSchemaVersions } from "../utils/service-config-checks.js";
 import { appendHealthPath, resolveSubdomainBases } from "../utils/service-urls.js";
 import {
@@ -57,7 +56,12 @@ import {
   stackExists,
   warnAboutSkippedFiles,
 } from "../utils/services.js";
-import { buildSmokePlans, formatSmokeFailure, runSmokePlans } from "../utils/smoke.js";
+import {
+  buildSmokePlans,
+  formatSmokeFailure,
+  runSmokePlans,
+  safeSmokeDeps,
+} from "../utils/smoke.js";
 import {
   buildStartupReport,
   formatStartupReport,
@@ -692,8 +696,7 @@ export const upCommand = new Command("up")
           if (ignoreWarning) console.warn(chalk.yellow(ignoreWarning));
           const results = await runSmokePlans(smokePlans, {
             recordDir: join(projectRoot, ".tdk", "smoke"),
-            redact: createEnvRedactor(projectRoot),
-            warn: (message) => console.warn(chalk.yellow(message)),
+            ...safeSmokeDeps(projectRoot, (message) => console.warn(chalk.yellow(message))),
           });
           for (const smokeResult of results) {
             if (smokeResult.ok) {

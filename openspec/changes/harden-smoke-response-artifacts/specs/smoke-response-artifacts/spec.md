@@ -89,6 +89,7 @@ Before any smoke text is shown or stored, the CLI MUST redact every secret value
 - **AND** it does not print the raw body snippet
 - **AND** it emits a warning that the body was not stored because it could not be redacted safely
 - **AND** the record still holds the safe metadata (service, step, method, status, error)
+- **AND** the recorded URL is withheld, because it could not be masked either
 - **AND** the smoke step's pass/fail result is unchanged by the artifact-write failure
 
 #### Scenario: Redacted body exceeds the record size limit

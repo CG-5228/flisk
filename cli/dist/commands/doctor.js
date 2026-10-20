@@ -25,11 +25,11 @@ import { getHostPortPlan, resolveRuntimeIngressPort } from "../utils/host-port-c
 import { createHostPortPlan } from "../utils/host-port-plan.js";
 import { findProjectRoot, getPackageVersion } from "../utils/paths.js";
 import { promptConfirm } from "../utils/prompt.js";
-import { createEnvRedactor, EnvUnreadableError, envSecretValues, redactSecrets, redactValue, } from "../utils/secret-redaction.js";
+import { EnvUnreadableError, envSecretValues, redactSecrets, redactValue, } from "../utils/secret-redaction.js";
 import { checkCircularDependencies, checkDependsOnShape, checkSchemaVersions, checkServicePorts, } from "../utils/service-config-checks.js";
 import { buildAdvertisedTargets, buildHealthTargets, getProjectName, pingHealthTargets, } from "../utils/service-urls.js";
 import { discoverResourcesFromRoot } from "../utils/services.js";
-import { buildSmokePlans, readOnlySmokePlans, runSmokePlans } from "../utils/smoke.js";
+import { buildSmokePlans, readOnlySmokePlans, runSmokePlans, safeSmokeDeps, } from "../utils/smoke.js";
 import { evaluateTdkVersionFloor } from "../utils/tdk-version.js";
 import { findOnPath } from "../utils/which.js";
 export { checkIngressPorts, checkPrivateNpmRegistry, checkTiltResourceHealth, summarizeServiceProbes, summarizeTiltBuildError, } from "../utils/doctor-runtime.js";
@@ -1066,7 +1066,7 @@ async function checkServiceSmoke(timeoutMs, ingressPort) {
         };
     }
     // Doctor shows the failure line too, so the body snippet is masked the same way `tdk up` masks it.
-    return summarizeSmokeResults(await runSmokePlans(plans, { redact: createEnvRedactor(projectRoot) }));
+    return summarizeSmokeResults(await runSmokePlans(plans, safeSmokeDeps(projectRoot)));
 }
 /**
  * Requests the URL each routable service advertises, the same one `tdk networks` and the TDK App show, and warns on a 404.
