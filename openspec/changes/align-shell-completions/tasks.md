@@ -12,6 +12,9 @@
 - [x] 2.3 Render the Fish script from the candidates, including the flags of every command and sub-command.
 - [x] 2.4 Render the PowerShell script from the candidates, including the flags of every command and sub-command.
 - [x] 2.5 Complete the stacks and the resources of the current project from `tdk stacks --json` and `tdk resources --json`.
+- [x] 2.6 Suggest the names of the sub-commands of a command in all four shells.
+- [x] 2.7 Offer the project values behind `--stack` and `--only` in all four shells, PowerShell included.
+- [x] 2.8 Offer the values a command accepts: the types of `tdk resource` and of `tdk resources`, and the frameworks and languages of the `--type` of the command line.
 
 ## 3. Tests
 
@@ -19,8 +22,11 @@
 - [x] 3.2 Check that the four shells offer the same commands and flags.
 - [x] 3.3 Update the tests that read the registered commands from the source of `cli.ts` to read them from the registry.
 - [x] 3.4 Verify that a new command makes the candidate test fail.
+- [x] 3.5 Check that the four shells offer the same sub-command names.
+- [x] 3.6 Check that every shell offers the project values behind `--stack` and `--only`.
 
 ## 4. Documentation
 
 - [x] 4.1 Document what the completions suggest and how to refresh them after an upgrade in `docs/cheat-sheet.md`.
 - [x] 4.2 Build the CLI and stage the changed `cli/dist` files.
+- [x] 4.3 Describe the values each command accepts and the values that depend on the `--type` in the cheat sheet and in the design of the change.

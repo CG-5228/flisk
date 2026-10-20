@@ -19,11 +19,13 @@ async function renderCompletion(shell: string): Promise<string> {
 describe("top-level shell completions", () => {
   it.each(SHELLS)("offers every registered command in the %s script", async (shell) => {
     const script = await renderCompletion(shell);
+    // The words of the script, so that "up" is not found inside "upgrade".
+    const words = script.split(/[^A-Za-z0-9-]+/).filter(Boolean);
 
     for (const command of getRegisteredCommands()) {
-      expect(script, `${shell} is missing the command ${command.name()}`).toContain(command.name());
+      expect(words, `${shell} is missing the command ${command.name()}`).toContain(command.name());
       for (const alias of command.aliases()) {
-        expect(script, `${shell} is missing the alias ${alias}`).toContain(alias);
+        expect(words, `${shell} is missing the alias ${alias}`).toContain(alias);
       }
     }
   });

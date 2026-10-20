@@ -26,6 +26,13 @@ export interface CompletionOption {
     /** True when the flag is followed by a value (`--type <type>`). */
     takesValue: boolean;
 }
+/** The values of a flag that depend on the `--type` of the current command line. */
+export interface TypeDependentValues {
+    /** The values for every `--type` the CLI accepts, keyed by the type. */
+    byType: Record<string, string[]>;
+    /** The values for a command line without a `--type`. */
+    fallback: string[];
+}
 /** A command the shells suggest. */
 export interface CompletionCommand {
     /** The name the user types (`tdk doctor`). */
@@ -40,6 +47,12 @@ export interface CompletionCommand {
     subcommands: CompletionCommand[];
     /** What the command's positional argument completes, when it takes a project value. */
     positional?: CompletionPositional;
+    /** The name of the positional argument of the command, when it takes one. */
+    argument?: string;
+    /** True when the positional argument takes many values. */
+    variadic?: boolean;
+    /** The values of the flags of this command, when the command accepts another set. */
+    optionValues?: Record<string, string[]>;
 }
 /** Everything the four completion scripts suggest. */
 export interface CompletionCandidates {
@@ -49,6 +62,8 @@ export interface CompletionCandidates {
     globalOptions: CompletionOption[];
     /** The fixed value lists, keyed by flag name (`--type` holds the resource types). */
     values: Record<string, string[]>;
+    /** The values that depend on the `--type` of the command line, keyed by flag name. */
+    typeValues: Record<string, TypeDependentValues>;
 }
 /**
  * Reads the completion candidates from the CLI: the registered commands with their flags, the

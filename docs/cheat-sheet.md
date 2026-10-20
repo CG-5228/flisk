@@ -414,9 +414,11 @@ The script is generated from the CLI itself: the command names, their flags, the
 #### What the completions suggest
 
 - Every command the CLI registers, with its aliases (`tdk ls` for `tdk stacks`, `tdk traefik` for `tdk networks`).
+- The sub-commands of a command, for example `tdk config <TAB>` (`regenerate`, `verify`, `edit`, ...).
 - The flags of the command you are on, for example `tdk doctor --<TAB>`.
-- The values of `--type` (the resource types), `--framework` (the frontend and backend frameworks) and `--language` (the backend languages).
-- The stacks and the resources of the current project, for `tdk up`, `tdk stack`, `tdk logs`, `tdk restart` and for `--stack`.
+- The values of `--type`: the types `tdk resource` creates (`backend`, `frontend`, `worker`, `mcp`, `agent`, `bring-your-own`, `sdk`) and, for `tdk resources`, every type a resource can have (`library` and `migrator` as well).
+- The values of `--framework` and `--language`: the frameworks of the `--type` of the command line (the frontend frameworks for `--type frontend`, the backend frameworks otherwise) and the backend languages. A type that accepts neither offers nothing, because the CLI rejects the flag for it.
+- The stacks and the resources of the current project, for `tdk up`, `tdk stack`, `tdk logs`, `tdk restart` and `tdk agent sessions`, and behind the `--stack` and `--only` flags.
 
 #### bash
 
@@ -455,7 +457,7 @@ This writes `~/.config/fish/completions/tdk.fish`, which fish loads by itself. O
 tdk completion --shell powershell --install
 ```
 
-This adds a block marked `# TDK-CLI-COMPLETION-START` / `# TDK-CLI-COMPLETION-END` to your PowerShell profile (`Documents\PowerShell` for PowerShell 7, `Documents\WindowsPowerShell` otherwise). Close and reopen PowerShell. PowerShell suggests the command names, the flags of the current command and the values of `--type`, `--framework` and `--language`.
+This adds a block marked `# TDK-CLI-COMPLETION-START` / `# TDK-CLI-COMPLETION-END` to your PowerShell profile (`Documents\PowerShell` for PowerShell 7, `Documents\WindowsPowerShell` otherwise). Close and reopen PowerShell. PowerShell suggests the command names, the sub-commands, the flags of the current command, the values of `--type`, `--framework` and `--language` and the stacks and the resources of the current project.
 
 #### Check that it works
 
