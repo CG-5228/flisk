@@ -1,0 +1,61 @@
+# Design: make legitimate TDK package usage discoverable
+
+## Context
+
+GitHub's dependency graph can surface public repositories that declare an ecosystem package dependency through supported manifests and lockfiles. This change concerns the published npm package `@tdk-landscape/tdk-cli-core` and a portfolio of separately maintained examples and starters. Merely installing a global CLI does not communicate a package dependency from a repository.
+
+The package metadata in the current CLI repository already points to `git+https://github.com/tdk-landscape/tdk-cli-core.git`; this should be verified against the published package and retained as a release requirement. GitHub's exact display behavior and refresh timing are external to the repository and should be observed after merges.
+
+## Goals / Non-goals
+
+### Goals
+
+- Identify official public repositories that genuinely use or demonstrate the published CLI.
+- Record a reproducible audit of each repository's ecosystem, manifest, lockfile, and actual CLI use.
+- Add appropriate declarations and lockfiles where they accurately describe project use.
+- Explain the mechanism to community adopters without promising an immediate sidebar or a particular count.
+- Measure the dependency graph after merge and distinguish graph entries from any sidebar display threshold.
+
+### Non-goals
+
+- Creating repositories or dependencies solely to inflate a metric.
+- Requiring users to add an npm dependency just to install or run the standalone CLI.
+- Adding a Node manifest to a non-Node project unless it has a real, maintainable role.
+- Changing CLI runtime, generated project output, or installation methods.
+- Guaranteeing the GitHub “Used by” sidebar appears after a specific number of repositories.
+
+## Decisions
+
+1. **Audit before editing.** Build a checklist of official public examples, starters, templates, and fixtures. Record repository URL, visibility, ecosystem, manifest and lockfile presence, how TDK is used, whether the package is already declared, and disposition. Exclude archived, private, unrelated, or inactive repositories with a recorded reason.
+
+2. **Represent real usage only.** Add the CLI package to the dependency section that matches its role. Use `devDependencies` only when the CLI is a development or scaffolding tool; use a runtime dependency only if the project actually needs the package at runtime. Pin according to each repository's existing policy and update its canonical lockfile. Do not add a declaration to a repository that neither installs nor uses the package.
+
+3. **Handle other ecosystems explicitly.** For a repository without a Node manifest, determine whether the CLI is actually consumed as an npm package. If so, document a minimal supported integration and maintain its lockfile; otherwise record an exception and provide the appropriate installation guidance. Do not add a fabricated `package.json` just to affect GitHub's count.
+
+4. **Verify package source metadata.** Confirm the npm-published package metadata's repository URL resolves to the canonical public repository. The source `package.json` currently uses the canonical GitHub URL; verify the publish path does not rewrite or omit it.
+
+5. **Document discoverability accurately.** Add a concise adopter note explaining that GitHub dependency-graph visibility depends on a public repository declaring a real package dependency in a supported manifest, and that processing/display is controlled by GitHub. Keep this separate from the standalone installation path.
+
+6. **Measure outcomes after publication and merge.** Check the repository's dependency graph/dependents view after GitHub has had time to process merged manifests. Record date, observed entries, and any limitations. Treat the sidebar threshold as an external behavior to verify, not as a fixed acceptance threshold or delivery guarantee.
+
+## Risks / Trade-offs
+
+- **Some examples may not use the npm package.** A declaration could mislead maintainers and downstream users. Mitigation: require audit evidence of actual usage before adding it.
+- **Lockfiles and package managers differ across repositories.** Mitigation: follow each repository's established tooling and avoid introducing a second package manager.
+- **GitHub may not count a repository immediately or may change display behavior.** Mitigation: record observations with dates and make dependency metadata correctness the acceptance criterion.
+- **A broad organization inventory can become stale.** Mitigation: keep the checklist with the tracking work and define a repeatable organization search/audit method.
+- **Adding a dev dependency may affect installation or security scanning.** Mitigation: use only where the CLI is genuinely part of the repository's development workflow and keep versions aligned with tested releases.
+
+## Rollout
+
+1. Establish and review the repository inventory and dependency-role decisions.
+2. Verify the published package metadata.
+3. Prepare small repository-specific manifest/lockfile changes for repositories with genuine package usage.
+4. Update adopter documentation in the CLI repository.
+5. Merge the changes, allow dependency-graph processing, and record the observed result.
+
+## Open Questions
+
+- Which official repositories are currently public and active, and which invoke or install the published npm package rather than using a binary/global installation?
+- What release range should each repository use under its own versioning policy?
+- Which adopter documentation page is the maintained canonical destination for this guidance?
