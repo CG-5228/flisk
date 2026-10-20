@@ -42,7 +42,7 @@ The smoke verification job MUST upload the smoke record directory when the job f
 
 #### Scenario: Missing route in verify-smoke
 
-- **WHEN** `scripts/verify-smoke.sh` runs the missing-route phase
+- **WHEN** `tests/e2e/journeys/smoke/verify-smoke.sh` runs the missing-route phase
 - **THEN** the failure record contains the public URL, status 404, and a non-empty body
 - **AND** the workflow uploads that directory as an artifact
 

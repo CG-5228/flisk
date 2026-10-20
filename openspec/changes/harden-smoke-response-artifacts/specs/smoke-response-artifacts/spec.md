@@ -2,7 +2,7 @@
 
 ### Requirement: Each smoke step retains status and body
 
-After a smoke step receives a response, `tdk up` MUST write a record containing the service, step name, method, public URL, expected status, actual status, and response body. The body MUST be capped at 64 KiB. A capped body MUST be marked truncated. The retained body MUST be the redacted body, so a stored body never holds a secret value the project knows about.
+After a smoke step receives a response, `tdk up` MUST write a record containing the service, step name, method, public URL, expected status, actual status, and response body. The body MUST be capped at 64 KiB. A capped body MUST be marked truncated. The retained body MUST be the redacted body, so a stored body never holds a secret value the redaction helper recognises for the project. The helper reads the project's `.env` and masks the values of at least 8 characters there; shorter values are left alone on purpose.
 
 #### Scenario: Failed step writes the record
 

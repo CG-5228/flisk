@@ -27,7 +27,7 @@ The body snippet in a failure line is a short, one-line excerpt for the terminal
 
 Before anything is shown or stored, the text is masked: the secret values of the project's own `.env` — the same ones `tdk logs` and `tdk doctor` mask — are replaced with `[REDACTED]`. That covers the stored body, the last-success copy, the printed snippet, and the URL and error kept in the record. It is not a secret scanner: it covers the values the `.env` holds, and nothing else, so a project without a readable `.env` has nothing to mask. If the `.env` exists but cannot be read, the body is neither shown nor stored, the record keeps only the safe metadata, and `tdk up` says so.
 
-The records are not committable: `tdk up` makes sure the project `.gitignore` ignores `.tdk/smoke/` before it writes the first record, and warns when it cannot. Git ignore is preventive only: it does not untrack files that were added before, and it does not take anything out of earlier commits.
+The records are ignored by default: `tdk up` makes sure the project `.gitignore` ignores `.tdk/smoke/` before it writes the first record, and warns when it cannot. Git ignore is preventive only: it does not untrack files that were added before, and it does not take anything out of earlier commits.
 
 The records survive `tdk down`, so a failure can still be read after the containers stop. They stay until a later run overwrites them or you delete them: `rm -rf .tdk/smoke/`.
 

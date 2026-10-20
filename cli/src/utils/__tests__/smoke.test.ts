@@ -653,6 +653,8 @@ describe("safeSmokeDeps", () => {
   });
 
   it("throws when the .env exists but cannot be read, so no raw text is shown or stored", () => {
+    // As root the mode bits do not block the read, and on Windows chmod does not either.
+    if (process.platform === "win32" || process.getuid?.() === 0) return;
     const dir = projectWithEnv("TOKEN=supersecrettoken\n");
     chmodSync(join(dir, ".env"), 0o000);
     try {
