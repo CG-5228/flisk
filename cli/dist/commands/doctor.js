@@ -25,7 +25,7 @@ import { getHostPortPlan, resolveRuntimeIngressPort } from "../utils/host-port-c
 import { createHostPortPlan } from "../utils/host-port-plan.js";
 import { findProjectRoot, getPackageVersion } from "../utils/paths.js";
 import { promptConfirm } from "../utils/prompt.js";
-import { EnvUnreadableError, envSecretValues, redactSecrets, redactValue, } from "../utils/secret-redaction.js";
+import { createEnvRedactor, EnvUnreadableError, envSecretValues, redactSecrets, redactValue, } from "../utils/secret-redaction.js";
 import { checkCircularDependencies, checkDependsOnShape, checkSchemaVersions, checkServicePorts, } from "../utils/service-config-checks.js";
 import { buildAdvertisedTargets, buildHealthTargets, getProjectName, pingHealthTargets, } from "../utils/service-urls.js";
 import { discoverResourcesFromRoot } from "../utils/services.js";
@@ -1065,7 +1065,8 @@ async function checkServiceSmoke(timeoutMs, ingressPort) {
             message: "No services responded - skipped smoke checks",
         };
     }
-    return summarizeSmokeResults(await runSmokePlans(plans));
+    // Doctor shows the failure line too, so the body snippet is masked the same way `tdk up` masks it.
+    return summarizeSmokeResults(await runSmokePlans(plans, { redact: createEnvRedactor(projectRoot) }));
 }
 /**
  * Requests the URL each routable service advertises, the same one `tdk networks` and the TDK App show, and warns on a 404.

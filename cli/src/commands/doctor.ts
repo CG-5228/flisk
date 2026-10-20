@@ -73,6 +73,7 @@ import { createHostPortPlan, type HostPortPlan } from "../utils/host-port-plan.j
 import { findProjectRoot, getPackageVersion } from "../utils/paths.js";
 import { promptConfirm } from "../utils/prompt.js";
 import {
+  createEnvRedactor,
   EnvUnreadableError,
   envSecretValues,
   redactSecrets,
@@ -1314,7 +1315,10 @@ async function checkServiceSmoke(timeoutMs: number, ingressPort?: number): Promi
     };
   }
 
-  return summarizeSmokeResults(await runSmokePlans(plans));
+  // Doctor shows the failure line too, so the body snippet is masked the same way `tdk up` masks it.
+  return summarizeSmokeResults(
+    await runSmokePlans(plans, { redact: createEnvRedactor(projectRoot) }),
+  );
 }
 
 /**

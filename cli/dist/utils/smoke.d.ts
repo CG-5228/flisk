@@ -49,6 +49,13 @@ export interface SmokeDeps {
     /** Directory the per-step records go under (`<dir>/<service>/<step-slug>/`). No directory, no records. */
     recordDir?: string;
     sleep?: (ms: number) => Promise<void>;
+    /**
+     * Masks the secret values the project knows about. Throwing means the text could not be masked safely, and the runner then
+     * neither shows nor stores it.
+     */
+    redact?: (text: string) => string;
+    /** Reports a problem that does not change the smoke result, such as a body that could not be stored safely. */
+    warn?: (message: string) => void;
 }
 export declare const DEFAULT_SMOKE_TIMEOUT_SECONDS = 60;
 /** Largest response body kept in a smoke record. */
