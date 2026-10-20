@@ -440,6 +440,14 @@
 		},
 		{
 			"workflow": "release-binaries.yml",
+			"job": "publish-github-packages",
+			"tier": "release",
+			"required": false,
+			"reason": "Publishes the npm package to GitHub Packages after the npm publish",
+			"owner": "maintainers"
+		},
+		{
+			"workflow": "release-binaries.yml",
 			"job": "tag-bumped-release",
 			"tier": "release",
 			"required": false,
