@@ -18,12 +18,14 @@
 - [x] 3.2 Cover the runtime scope: it still blocks with the ranked failures and their fixes.
 - [x] 3.3 Cover `tdk project` with Docker stopped and Tilt missing: the project is created, the template is cloned, and the next-step hint is printed.
 - [x] 3.4 Cover `tdk up` with Docker stopped and Tilt missing: it exits 1 with the actionable message.
+- [x] 3.5 Cover the blocking path the scaffold scope keeps: without Bun the setup stops with `Project setup blocked. Bun 1.2+ must be installed on PATH.` and writes nothing.
 
 ## 4. Documentation
 
 - [x] 4.1 Update `cli/README.md` and `docs/cheat-sheet.md` with the new `tdk project` behavior.
 - [x] 4.2 Update `docs/troubleshooting.md` so the cold-start entry states that only `tdk up` is blocked.
 - [x] 4.3 Update `docs/ARCHITECTURE.md` with the two preflight scopes.
+- [x] 4.4 Correct `docs/ci.md`, which still claimed that `tdk project --yes` exits 1 without Docker and Tilt.
 
 ## 5. Acceptance
 

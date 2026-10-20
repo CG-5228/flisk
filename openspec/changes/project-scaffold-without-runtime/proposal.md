@@ -47,4 +47,4 @@ conflict must not be archived silently - the archived `cold-npx-preflight` spec 
 - CLI preflight utility: `cli/src/utils/cold-preflight.ts` (new scopes, runtime prerequisite detection, next-step formatting).
 - CLI command: `cli/src/commands/project.ts` (scaffold scope and the next-step hint).
 - Tests: `cli/src/utils/cold-preflight-scope.test.ts`, `cli/src/commands/__tests__/project-without-runtime.test.ts`, `cli/src/commands/__tests__/up-runtime-preflight.test.ts`, plus the existing project command tests.
-- Documentation: `cli/README.md`, `docs/cheat-sheet.md`, `docs/troubleshooting.md`, `docs/ARCHITECTURE.md`.
+- Documentation: `cli/README.md`, `docs/cheat-sheet.md`, `docs/troubleshooting.md`, `docs/ARCHITECTURE.md`, `docs/ci.md`.
