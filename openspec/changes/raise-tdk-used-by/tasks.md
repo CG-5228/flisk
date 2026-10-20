@@ -59,7 +59,7 @@ Secondary audit-only candidates, generally expected not to need a package declar
 - [x] 5.1 Open or update [tracking issue #1716](https://github.com/tdk-landscape/tdk-cli-core/issues/1716) with audited repositories, dispositions, and the proposal's baseline dependents observation.
 - [ ] 5.2 After consumer changes merge, re-check GitHub's dependency graph/dependents view and record the date and observed count.
 - [x] 5.3 Record the display limitation and that processing timing is controlled by GitHub; no processing delay has been measured yet. Do not create artificial dependencies to reach a target number.
-- [ ] 5.4 Confirm adopter documentation and package metadata are published and discoverable.
+- [x] 5.4 Confirm adopter documentation and package metadata are on `main` and discoverable. Verified 20 October 2026: `ADOPTERS.md` guidance is merged, and npm latest `1.3.186` retains the canonical repository URL.
 
 ## Optional: GitHub Packages visibility
 
