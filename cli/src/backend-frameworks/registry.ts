@@ -3,6 +3,7 @@
 
 import { resolveAgentRuntime } from "../agent-runtimes/registry.js";
 import { getBackendIndexTemplate } from "../backend-languages/bun.js";
+import { BACKEND_LANGUAGES, getBackendLanguage } from "../backend-languages/registry.js";
 import { TdkError } from "../utils/errors.js";
 import { elysiaBackendProvider } from "./elysia.js";
 import { expressBackendProvider } from "./express.js";
@@ -33,6 +34,53 @@ export const BACKEND_FRAMEWORKS: Record<string, BackendFrameworkProvider> = {
   koa: koaBackendProvider,
   nestjs: nestBackendProvider,
 };
+
+export interface BackendFrameworkInventoryEntry {
+  id: string;
+  label: string;
+  /**
+   * The backend language ids this framework can be combined with, derived from the language registry.
+   * The language id is also the runtime the service is scaffolded on (`bun` for every JS framework).
+   */
+  languages: string[];
+  /** False when the framework cannot be combined with the requested `--language`. */
+  compatible: boolean;
+  /** The copy-pasteable `tdk resource` invocation. */
+  command: string;
+}
+
+/**
+ * The languages a framework can be combined with, decided by the same validation the resource command
+ * uses: a language that owns its runtime (python, go, rust, node) cannot be combined with a framework.
+ */
+function compatibleLanguages(frameworkId: string): string[] {
+  return Object.keys(BACKEND_LANGUAGES).filter((languageId) => {
+    try {
+      resolveBackendFramework("backend", frameworkId, BACKEND_LANGUAGES[languageId]);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+}
+
+/**
+ * Lists the registered backend frameworks with the language (and runtime) they are scaffolded with, so
+ * `tdk resource --type backend --frameworks` is the whole backend discovery surface.
+ */
+export function listBackendFrameworks(languageId?: string): BackendFrameworkInventoryEntry[] {
+  const requested = languageId ? getBackendLanguage(languageId) : undefined;
+  return Object.entries(BACKEND_FRAMEWORKS).map(([id, provider]) => {
+    const languages = compatibleLanguages(id);
+    return {
+      id,
+      label: provider.label,
+      languages,
+      compatible: requested ? languages.includes(requested.id) : true,
+      command: `tdk resource <name> --type backend --framework ${id}`,
+    };
+  });
+}
 
 export function getBackendFramework(frameworkId?: string): BackendFrameworkProvider {
   const id = (frameworkId ?? DEFAULT_BACKEND_FRAMEWORK).trim().toLowerCase();

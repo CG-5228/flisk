@@ -15,6 +15,23 @@ provider's optional `compilerOptions`. The id is saved as `framework` in `servic
 `framework` field and the output is byte-identical to before. A framework cannot be combined with a language that owns its
 runtime (`--language python`, `--language go`, `--language rust` or `--language node`).
 
+`tdk resource --type backend --frameworks` lists the registered backend frameworks with the id, the display name, the
+language they are scaffolded with (`bun`, which is also the runtime) and the command that creates them:
+
+```bash
+tdk resource --type backend --frameworks
+# hono       Bun + Hono       bun       compatible        tdk resource <name> --type backend --framework hono
+# express    Bun + Express    bun       compatible        tdk resource <name> --type backend --framework express
+# elysia     Bun + Elysia     bun       compatible        tdk resource <name> --type backend --framework elysia
+# fastify    Bun + Fastify    bun       compatible        tdk resource <name> --type backend --framework fastify
+# h3         Bun + h3         bun       compatible        tdk resource <name> --type backend --framework h3
+# koa        Bun + Koa        bun       compatible        tdk resource <name> --type backend --framework koa
+# nestjs     Bun + NestJS     bun       compatible        tdk resource <name> --type backend --framework nestjs
+```
+
+Add `--language <id>` to see which frameworks that language rules out: a language that owns its runtime marks every
+framework as `incompatible with --language <id>`, so the invalid combination is visible before a resource is created.
+
 | File | Responsibility |
 | --- | --- |
 | `cli/src/backend-frameworks/<id>.ts` | Framework id, dependencies, dev dependencies, and the `src/index.ts` template |
