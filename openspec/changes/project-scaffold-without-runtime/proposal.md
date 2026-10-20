@@ -27,6 +27,21 @@
 - Changing generated project files, templates, or the engine.
 - Relaxing the Bun requirement of project setup.
 
+## OpenSpec interaction: the unarchived `cold-npx-preflight` change
+
+`cold-npx-preflight` is still open (not archived). Its `cold-npx-preflight` capability carries the requirement
+"Startup commands stop before side effects": the `project` and `up` commands MUST run the machine preflight and
+MUST exit with code 1 if any of the first six machine checks fail.
+
+This change narrows that requirement for one of the two commands: `tdk project` now runs the scaffold scope, which
+keeps the Node, Bun and host-port checks and drops the Docker, Compose and Tilt probes, while `tdk up` stays on the
+runtime scope. The two changes therefore contradict each other on `project` until `cold-npx-preflight` is archived.
+
+Reconciliation is required when `cold-npx-preflight` is archived: the "Startup commands stop before side effects"
+requirement has to be split, so that `project` is gated on the scaffold checks and `up` on the runtime checks. The
+conflict must not be archived silently - the archived `cold-npx-preflight` spec has to record the narrowed gate for
+`project`, otherwise archiving it would reintroduce the runtime requirement for project setup.
+
 ## Impact
 
 - CLI preflight utility: `cli/src/utils/cold-preflight.ts` (new scopes, runtime prerequisite detection, next-step formatting).

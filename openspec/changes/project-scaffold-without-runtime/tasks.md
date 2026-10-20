@@ -30,3 +30,7 @@
 - [x] 5.1 Confirm `tdk project` succeeds with Docker stopped and Tilt not installed.
 - [x] 5.2 Confirm `tdk up` still blocks with the actionable message.
 - [x] 5.3 Confirm `tdk doctor` remains available as the explicit readiness check.
+
+## 6. OpenSpec reconciliation
+
+- [ ] 6.1 When the unarchived `cold-npx-preflight` change is archived, split its "Startup commands stop before side effects" requirement so that `project` is gated on the scaffold checks and `up` on the runtime checks.
