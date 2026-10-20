@@ -29,7 +29,7 @@ jobs:
         id: npm-package
         env:
           VERSION: ${{ inputs.version }}
-        run: |
+        run: | # zizmor: ignore[use-trusted-publishing] GitHub Packages does not support npm trusted publishing; authenticate with the repository GITHUB_TOKEN
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
             echo "::error::Version must be a valid numeric semantic version"
             exit 1
