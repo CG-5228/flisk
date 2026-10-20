@@ -1,21 +1,21 @@
 // Copyright (c) 2026 TDK Landscape contributors
 // SPDX-License-Identifier: MIT
 import { spawnSync } from "node:child_process";
-import { dirname, join, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { BACKEND_FRAMEWORKS } from "../../backend-frameworks/registry.js";
 import { FRONTEND_FRAMEWORKS } from "../../frontend-frameworks/registry.js";
+import { tdkBin } from "../../test-support/index.js";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
-const cliBin = join(repoRoot, "cli", "bin", "tdk.js");
 
 /**
  * The inventory is a CLI contract, so the test runs the real binary. A spawned process also keeps
  * commander's option state per run: an in-process parse keeps the previous run's `--type` source.
  */
 function tdk(args: string[]) {
-  return spawnSync(process.execPath, [cliBin, ...args], {
+  return spawnSync(process.execPath, [tdkBin, ...args], {
     encoding: "utf-8",
     env: { ...process.env, TDK_EXTENSION_SOURCE: repoRoot },
   });
