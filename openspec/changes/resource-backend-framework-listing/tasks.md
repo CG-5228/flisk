@@ -24,3 +24,13 @@
 - [x] 4.2 `cd cli && ./node_modules/.bin/tsc --noEmit`
 - [x] 4.3 `cd cli && npm run build` and stage the changed `cli/dist` files.
 - [x] 4.4 `cd cli && ./node_modules/.bin/vitest run` for the new and the touched test files, then the full suite.
+
+## 5. Review follow-ups
+
+- [x] 5.1 Keep the historical frontend listing (exit 0) when `--language` is given without an explicit `--type`, and add a regression test for it.
+- [x] 5.2 Name the requested `--language` in the printed command, so a copied row scaffolds the language the listing was asked about.
+- [x] 5.3 Name the language in the compatibility cell (`compatible with bun`).
+- [x] 5.4 Catch only the expected `TdkError` in `compatibleLanguages`, so an unexpected error surfaces instead of shrinking the language column.
+- [x] 5.5 Derive the frontend verification column from the registry in the test.
+- [x] 5.6 Use the shared `runTdk` helper in the inventory test.
+- [x] 5.7 Move the listing block in `docs/backend-language-providers.md` so the file table stays next to its intro.

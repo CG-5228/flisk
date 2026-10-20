@@ -19,6 +19,11 @@ default or the scaffold behavior:
 - `--type frontend` → the same frontend listing;
 - `--type backend` → the backend listing.
 
+The same rule decides what `--language` means. Without an explicit `--type` the listing is the frontend
+one, and `--language` is a backend option, so it is not applied to it: `tdk resource --language python
+--frameworks` prints the frontend listing and exits successfully, exactly as before this change. With an
+explicit `--type frontend`, `--language` is still rejected, because a frontend resource has no language.
+
 ### 3. One tab separated row per framework
 
 The frontend listing prints `id`, `label`, `kind`, `verification`, `command`, one framework per row, tab
@@ -27,9 +32,14 @@ The language id is also the runtime the service runs on (`bun` for every registe
 label already names it (`Bun + Express`), so the row shows the id, the display name, the language and the
 runtime without a redundant column.
 
-The compatibility cell is `compatible`, or `incompatible with --language <id>` when the user asked for a
-language that owns its runtime. The row still shows the command that works (the framework on the default
-Bun language), because the invalid part of the user's command is the language, not the framework.
+The compatibility cell names the language the row is judged against: `compatible with bun` for the default
+language, `incompatible with --language python` when the user asked for a language that owns its runtime.
+A bare "compatible" would not say against which language the row was judged.
+
+The command of a row is the one a user can copy. A requested `--language` is part of it, so copying a row
+never scaffolds a different language than the one the listing was about. A framework that cannot be
+combined with the requested language has no framework to pick (that language owns its runtime), so its
+command is the one that creates the resource in that language, without a framework.
 
 ### 4. Types without frameworks fail loudly
 
@@ -42,3 +52,8 @@ code.
 The inventory is a CLI contract, so the test spawns `cli/bin/tdk.js` and reads the tab separated output.
 A spawned process also avoids the commander state that an in-process `parseAsync` keeps between runs,
 where a `--type` from an earlier case would still be set for a later one.
+
+The test uses the shared `runTdk` helper from `cli/src/test-support`, so the binary runs without color and
+the exit status is always a real one. The expectations are derived from the registries: the verification
+column from the frontend registry, the label from the backend framework registry, so a new provider does
+not break the test.

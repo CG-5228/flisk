@@ -20,9 +20,12 @@ backend list.
   `cli/src/backend-languages/registry.ts`) and from the same validation the resource command uses, so it
   can never drift from what `--framework` and `--language` actually accept.
 - `tdk resource --type backend --language <id> --frameworks` marks every framework that cannot be combined
-  with the requested language, instead of leaving the user to hit the error at creation time.
+  with the requested language, instead of leaving the user to hit the error at creation time. The
+  compatibility cell names the language it is judged against, and the printed command names the requested
+  language, so a copied row scaffolds that language instead of silently falling back to Bun.
 - `tdk resource --frameworks` (no `--type`) keeps the historical frontend listing, byte for byte, so
-  scripts and docs that rely on it keep working. `--type frontend` prints the same list.
+  scripts and docs that rely on it keep working. `--type frontend` prints the same list, and a `--language`
+  without an explicit `--type` does not change it.
 - A resource type without frameworks (`worker`, `mcp`, `agent`, `bring-your-own`, `sdk`) fails with an
   actionable message instead of an empty list.
 - `tdk resource --help` documents `--type backend --frameworks`.
