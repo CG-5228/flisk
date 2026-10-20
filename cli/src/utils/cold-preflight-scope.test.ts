@@ -26,6 +26,10 @@ vi.mock("node:child_process", async (importOriginal) => ({
   ...(await importOriginal<typeof import("node:child_process")>()),
   execFileSync: probes.execFileSync,
 }));
+vi.mock("./paths.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./paths.js")>()),
+  findProjectRoot: vi.fn(() => null),
+}));
 
 import {
   assertMachineReadyOrExit,
@@ -123,6 +127,22 @@ describe("cold preflight scope", () => {
 
     expect(exitSpy).not.toHaveBeenCalled();
     expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it("still blocks the scaffold scope when Bun is missing", async () => {
+    probes.findOnPath.mockImplementation(() => null);
+
+    await expect(assertMachineReadyOrExit({ scope: "scaffold" })).rejects.toThrow(
+      "process.exit(1)",
+    );
+
+    const output = errorOutput();
+    expect(output).toContain("Project setup blocked. Bun 1.2+ must be installed on PATH.");
+    expect(output).toContain("FAIL bun");
+    // The runtime stays out of the scaffold gate, so it is not reported here.
+    expect(output).not.toContain("FAIL docker");
+    expect(output).not.toContain("FAIL compose");
+    expect(output).not.toContain("FAIL tilt");
   });
 });
 

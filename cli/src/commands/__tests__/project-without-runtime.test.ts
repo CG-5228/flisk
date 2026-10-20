@@ -85,9 +85,14 @@ let root = "";
 let originalCwd = "";
 let exitSpy: ReturnType<typeof vi.spyOn>;
 let logSpy: ReturnType<typeof vi.spyOn>;
+let errorSpy: ReturnType<typeof vi.spyOn>;
 
 function output(): string {
   return logSpy.mock.calls.map((call: unknown[]) => String(call[0])).join("\n");
+}
+
+function errorOutput(): string {
+  return errorSpy.mock.calls.map((call: unknown[]) => String(call[0])).join("\n");
 }
 
 beforeEach(() => {
@@ -125,12 +130,14 @@ beforeEach(() => {
     throw new ProcessExit(code ?? 0);
   }) as never);
   logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+  errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 afterEach(() => {
   process.chdir(originalCwd);
   exitSpy.mockRestore();
   logSpy.mockRestore();
+  errorSpy.mockRestore();
   vi.clearAllMocks();
   rmSync(root, { recursive: true, force: true });
 });
@@ -165,5 +172,19 @@ describe("tdk project without a local runtime", () => {
 
     expect(existsSync(join(root, "tdk-example", "services"))).toBe(true);
     expect(exitSpy).not.toHaveBeenCalled();
+  });
+
+  it("still blocks the setup when Bun is missing, because the scaffold scope keeps the Bun check", async () => {
+    mocks.findOnPath.mockImplementation(() => null);
+
+    await expect(runProject({ check: false, force: false, yes: true })).rejects.toThrow(
+      "process.exit(1)",
+    );
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(errorOutput()).toContain("Project setup blocked. Bun 1.2+ must be installed on PATH.");
+    expect(errorOutput()).toContain("FAIL bun");
+    // Nothing is written before the gate blocks.
+    expect(existsSync(join(root, ".tdk", "project.json"))).toBe(false);
   });
 });

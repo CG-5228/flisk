@@ -94,6 +94,12 @@ describe("tdk up readiness gate", () => {
     );
 
     expect(exitSpy).toHaveBeenCalledWith(1);
+    // The readiness gate has to be what blocks the startup. Without it `tdk up`
+    // still exits 1, but later, with "Could not find project root" - a
+    // different failure that this assertion would not accept.
+    const output = errorOutput();
+    expect(output).toContain("Cold start blocked");
+    expect(output).toContain("FAIL docker");
   });
 
   it("reports the actionable fixes for the missing runtime", async () => {
