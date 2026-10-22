@@ -207,13 +207,35 @@ function Get-ReleaseLayout {
   Copy-Item -LiteralPath $exeAsset -Destination $exe -Force
   $engine = Join-Path $dir 'tdk-cli'
   if (-not (Test-Path -LiteralPath (Join-Path $engine 'shared-platform-engineering'))) {
-    $tar = Get-Command tar.exe -ErrorAction SilentlyContinue
-    if (-not $tar) { throw 'tar.exe is required to unpack the engine archive. Windows 10 1803 and newer ship it.' }
-    & $tar.Source -xzf $engineAsset -C $dir
+    & (Get-TarPath) -xzf $engineAsset -C $dir
     if ($LASTEXITCODE -ne 0) { throw "tar could not extract $engineAsset" }
   }
   if (-not (Test-Path -LiteralPath $engine)) { throw 'the engine archive did not contain tdk-cli' }
   return @{ Tag = $tag; Exe = $exe; Engine = $engine; Checksums = $checksums }
+}
+
+function Get-TarPath {
+  # The Windows system tar (bsdtar) reads "C:\..." as a path. The GNU tar that Git for Windows ships reads it as a remote
+  # host and fails with "Cannot connect to C: resolve failed", so the system tar is the one to use. The repository's own
+  # release check does the same (tests/e2e/platforms/windows-binary/run.sh puts C:\Windows\System32 first).
+  $systemTar = Join-Path $env:SystemRoot 'System32\tar.exe'
+  if (Test-Path -LiteralPath $systemTar) { return $systemTar }
+  $tar = Get-Command tar.exe -ErrorAction SilentlyContinue
+  if (-not $tar) { throw 'tar.exe is required to unpack the engine archive. Windows 10 1803 and newer ship it.' }
+  return $tar.Source
+}
+
+function Get-NativePath {
+  # The PATH a normal PowerShell window has: without the Git for Windows toolchain directories, whose GNU tar cannot
+  # read a "C:\..." path.
+  param([string]$Path)
+  $kept = @()
+  foreach ($entry in ($Path -split ';')) {
+    if (-not $entry) { continue }
+    if ($entry -match '(?i)[\\/]usr[\\/]bin|[\\/]mingw|msys|cygwin') { continue }
+    $kept += $entry
+  }
+  return ($kept -join ';')
 }
 
 function Get-ExpectedVersion {
@@ -310,6 +332,48 @@ function Invoke-Wh1 {
   }
 }
 
+function Invoke-Installer {
+  # Run the official installer in its own shell, with the given PATH, and report what it did.
+  param([string]$InstallDir, [string]$Path)
+  $installer = Join-Path $script:WorkDir 'install.ps1'
+  if (-not (Test-Path -LiteralPath $installer)) {
+    $parameters = @{ Uri = $script:InstallerUrl; OutFile = $installer }
+    if ($PSVersionTable.PSVersion.Major -lt 6) { $parameters['UseBasicParsing'] = $true }
+    Invoke-WebRequest @parameters
+  }
+  $shell = Get-Command pwsh -ErrorAction SilentlyContinue
+  $shellExe = if ($shell) { $shell.Source } else { (Get-Process -Id $PID).Path }
+  $stdoutFile = Join-Path $script:WorkDir 'installer.out'
+  $stderrFile = Join-Path $script:WorkDir 'installer.err'
+  $userPathBefore = [Environment]::GetEnvironmentVariable('Path', 'User')
+  $pathBefore = $env:PATH
+  try {
+    $env:TDK_INSTALL_DIR = $InstallDir
+    $env:PATH = $Path
+    $process = Start-Process -FilePath $shellExe -ArgumentList @('-NoProfile', '-File', "`"$installer`"") -NoNewWindow -PassThru `
+      -RedirectStandardOutput $stdoutFile -RedirectStandardError $stderrFile
+    if (-not $process.WaitForExit(600 * 1000)) {
+      try { $process.Kill() } catch { }
+      throw 'the installer did not finish within 600s'
+    }
+    $process.WaitForExit()
+    $stdout = if (Test-Path $stdoutFile) { [string](Get-Content -LiteralPath $stdoutFile -Raw) } else { '' }
+    $stderr = if (Test-Path $stderrFile) { [string](Get-Content -LiteralPath $stderrFile -Raw) } else { '' }
+    return [pscustomobject]@{
+      ExitCode = $process.ExitCode
+      StdOut = $stdout
+      StdErr = $stderr
+      Shell = (Split-Path -Leaf $shellExe)
+      UserPathAfter = [Environment]::GetEnvironmentVariable('Path', 'User')
+    }
+  } finally {
+    Remove-Item Env:TDK_INSTALL_DIR -ErrorAction SilentlyContinue
+    $env:PATH = $pathBefore
+    # The installer appends the install directory to the user PATH. Put the machine back the way it was.
+    [Environment]::SetEnvironmentVariable('Path', $userPathBefore, 'User')
+  }
+}
+
 function Invoke-Wh2 {
   # WH2: the official installer on this machine. It downloads the release, verifies the checksum, unpacks the engine next
   # to the exe, adds the install directory to the user PATH and runs the exe. The user PATH is restored afterwards.
@@ -318,37 +382,11 @@ function Invoke-Wh2 {
   if (Test-Path -LiteralPath $installDir) { Remove-Item -Recurse -Force -LiteralPath $installDir }
   New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
-  $installer = Join-Path $script:WorkDir 'install.ps1'
-  if (-not (Test-Path -LiteralPath $installer)) {
-    $parameters = @{ Uri = $script:InstallerUrl; OutFile = $installer }
-    if ($PSVersionTable.PSVersion.Major -lt 6) { $parameters['UseBasicParsing'] = $true }
-    Invoke-WebRequest @parameters
-  }
-
-  $shell = Get-Command pwsh -ErrorAction SilentlyContinue
-  $shellExe = if ($shell) { $shell.Source } else { (Get-Process -Id $PID).Path }
-  $userPathBefore = [Environment]::GetEnvironmentVariable('Path', 'User')
-  $stdoutFile = Join-Path $script:WorkDir 'installer.out'
-  $stderrFile = Join-Path $script:WorkDir 'installer.err'
-  try {
-    $env:TDK_INSTALL_DIR = $installDir
-    $process = Start-Process -FilePath $shellExe -ArgumentList @('-NoProfile', '-File', "`"$installer`"") -NoNewWindow -PassThru `
-      -RedirectStandardOutput $stdoutFile -RedirectStandardError $stderrFile
-    if (-not $process.WaitForExit(600 * 1000)) {
-      try { $process.Kill() } catch { }
-      throw 'the installer did not finish within 600s'
-    }
-    $process.WaitForExit()
-    if ($process.ExitCode -ne 0) {
-      $stderr = if (Test-Path $stderrFile) { [string](Get-Content -LiteralPath $stderrFile -Raw) } else { '' }
-      throw "install.ps1 exited $($process.ExitCode): $stderr"
-    }
-    $userPathAfter = [Environment]::GetEnvironmentVariable('Path', 'User')
-  } finally {
-    Remove-Item Env:TDK_INSTALL_DIR -ErrorAction SilentlyContinue
-    # The installer appends the install directory to the user PATH. Put the machine back the way it was.
-    [Environment]::SetEnvironmentVariable('Path', $userPathBefore, 'User')
-  }
+  # A PowerShell window on a normal Windows install has no Git for Windows toolchain directory on its PATH. Where one is
+  # there (Git Bash, or a shell started from it), the installer picks Git's GNU tar, which cannot read a "C:\..." path.
+  $nativePath = Get-NativePath $env:PATH
+  $result = Invoke-Installer $installDir $nativePath
+  if ($result.ExitCode -ne 0) { throw "install.ps1 exited $($result.ExitCode): $($result.StdErr)" }
 
   $exe = Join-Path $installDir 'tdk.exe'
   if (-not (Test-Path -LiteralPath $exe)) { throw "the installer did not place tdk.exe in $installDir" }
@@ -356,7 +394,7 @@ function Invoke-Wh2 {
   if (-not (Test-Path -LiteralPath (Join-Path $engine 'shared-platform-engineering'))) {
     throw 'the installer did not unpack the tdk-cli engine next to tdk.exe'
   }
-  $pathEntries = @(([string]$userPathAfter) -split ';' | Where-Object { $_ })
+  $pathEntries = @(([string]$result.UserPathAfter) -split ';' | Where-Object { $_ })
   $onPath = @($pathEntries | Where-Object { $_.TrimEnd('\') -ieq $installDir.TrimEnd('\') }).Count -gt 0
   if (-not $onPath) { throw 'the installer did not add the install directory to the user PATH' }
 
@@ -366,9 +404,27 @@ function Invoke-Wh2 {
   if ($assets.ExitCode -ne 0) { throw "tdk.exe runtime --check-assets exited $($assets.ExitCode): $($assets.Text)" }
   $report = $assets.StdOut | ConvertFrom-Json
   if (-not $report.ok) { throw "the installed runtime assets are incomplete: $($assets.StdOut)" }
+
+  $observations = @("the installer $script:InstallerUrl ran with $($result.Shell) and installed the latest release")
+
+  # The same installer, with the PATH this process actually has. On a machine with the Git for Windows toolchain on the
+  # PATH the installer picks Git's GNU tar and the extraction fails. Record it instead of hiding it.
+  if ($nativePath -ne $env:PATH) {
+    $gitBashDir = Join-Path $script:WorkDir 'flisk install with git bash'
+    if (Test-Path -LiteralPath $gitBashDir) { Remove-Item -Recurse -Force -LiteralPath $gitBashDir }
+    New-Item -ItemType Directory -Force -Path $gitBashDir | Out-Null
+    $gitBashResult = Invoke-Installer $gitBashDir $env:PATH
+    if ($gitBashResult.ExitCode -eq 0) {
+      $observations += 'with the Git for Windows toolchain on the PATH the installer still succeeds'
+    } else {
+      $firstLine = ($gitBashResult.StdErr -split "`n" | Where-Object { $_.Trim() } | Select-Object -First 1)
+      $observations += "with the Git for Windows toolchain on the PATH the installer fails: $($firstLine.Trim()) (flisk-sh/website#67)"
+    }
+  }
+
   return @{
     Detail = "installed to $installDir, version $($version.StdOut.Trim())"
-    Observations = @("the installer $script:InstallerUrl ran with $(Split-Path -Leaf $shellExe) and installed the latest release")
+    Observations = $observations
   }
 }
 
@@ -568,10 +624,10 @@ foreach ($id in $selected) {
   try {
     $result = & $cases[$id].Run
     Save-Result -CaseId $id -Title $cases[$id].Title -Status 'PASS' -Detail $result.Detail -Observations $result.Observations
-    Write-Host "PASS $id"
+    Write-Host "$id PASS"
   } catch {
     Save-Result -CaseId $id -Title $cases[$id].Title -Status 'FAIL' -Detail $_.Exception.Message -Observations @()
-    Write-Host "FAIL $id : $($_.Exception.Message)"
+    Write-Host "$id FAIL: $($_.Exception.Message)"
     $failed += $id
   }
 }
