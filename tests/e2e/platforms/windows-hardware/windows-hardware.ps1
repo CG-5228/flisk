@@ -301,7 +301,10 @@ function Write-FindingsReport {
 function Save-Result {
   param([string]$CaseId, [string]$Title, [string]$Status, [string]$Detail, [string[]]$Observations = @())
   $record = [ordered]@{ Case = $CaseId; Title = $Title; Status = $Status; Detail = $Detail; Observations = $Observations }
-  Add-Content -LiteralPath $script:ResultsFile -Value ($record | ConvertTo-Json -Compress) -Encoding UTF8
+  # A case that runs again replaces its old row, so the report holds one row per case.
+  $records = @(Get-RecordedResults | Where-Object { $_.Case -ne $CaseId })
+  $records += ($record | ConvertTo-Json -Compress | ConvertFrom-Json)
+  Set-Content -LiteralPath $script:ResultsFile -Value ($records | ForEach-Object { $_ | ConvertTo-Json -Compress }) -Encoding UTF8
   Write-FindingsReport
 }
 
