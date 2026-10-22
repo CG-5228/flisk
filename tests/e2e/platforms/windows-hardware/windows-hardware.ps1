@@ -161,11 +161,35 @@ function Get-ExpectedHash {
   return $found[0]
 }
 
+function Get-LatestReleaseTag {
+  # The "latest" page redirects to the release it points at, and the redirect does not use the API rate limit. The API
+  # allows 60 anonymous requests an hour per address, which a shared runner address runs out of.
+  param([string]$Repository)
+  $parameters = @{ Uri = "https://github.com/$Repository/releases/latest" }
+  if ($PSVersionTable.PSVersion.Major -lt 6) { $parameters['UseBasicParsing'] = $true }
+  $response = Invoke-WebRequest @parameters
+  $final = $null
+  if ($response.BaseResponse.RequestMessage) { $final = $response.BaseResponse.RequestMessage.RequestUri.AbsoluteUri }
+  elseif ($response.BaseResponse.ResponseUri) { $final = $response.BaseResponse.ResponseUri.AbsoluteUri }
+  if (-not $final -or $final -notmatch '/releases/tag/(?<tag>[^/]+)$') { return $null }
+  return $Matches.tag
+}
+
 function Get-ReleaseTag {
   if ($script:Release -and $script:Release -ne 'latest') { return $script:Release }
+  try {
+    $tag = Get-LatestReleaseTag $script:ReleaseRepository
+    if ($tag) { return $tag }
+  } catch {
+    Write-Step "the release redirect did not work: $($_.Exception.Message)"
+  }
   $headers = @{ 'User-Agent' = 'flisk-windows-hardware-e2e' }
   if ($env:FLISK_WINDOWS_GITHUB_TOKEN) { $headers['Authorization'] = "Bearer $env:FLISK_WINDOWS_GITHUB_TOKEN" }
-  $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$script:ReleaseRepository/releases/latest" -Headers $headers
+  try {
+    $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$script:ReleaseRepository/releases/latest" -Headers $headers
+  } catch {
+    throw "could not resolve the latest release: $($_.Exception.Message). Pin a tag in FLISK_WINDOWS_RELEASE, or set FLISK_WINDOWS_GITHUB_TOKEN."
+  }
   if (-not $release.tag_name) { throw 'The GitHub API returned no tag for the latest release.' }
   return $release.tag_name
 }
