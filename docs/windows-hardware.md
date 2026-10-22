@@ -94,7 +94,17 @@ Record the result of each row, with the Windows build, the PowerShell version an
 
 The suite writes a findings report with one row per case, the host facts (Windows build, architecture, PowerShell, Docker, Tilt, Bun, Node), the release it tested and the SHA-256 of the exe. Link the report from the issue that asked for the run; a hosted run's report is the artifact `windows-hardware-findings-hosted-<run id>`, a machine run's is `windows-hardware-findings-machine-<run id>`.
 
-Findings recorded so far are in the [Windows hardware issue](https://github.com/flisk-sh/flisk/issues/1765). The gaps above are the open ones.
+### What the reference run found
+
+The reference run on `windows-latest` (2026-10-22, release v1.3.204, [run](https://github.com/flisk-sh/flisk/actions/runs/39703690654)) passes all five cases and records three things worth acting on:
+
+| Finding | Where | Status |
+| --- | --- | --- |
+| The official installer breaks when the Git for Windows toolchain is on the PATH: it resolves Git's GNU `tar.exe`, which reads `C:\...` as a remote host, so the engine is never unpacked. | `install.ps1` in the website repository | [flisk-sh/website#67](https://github.com/flisk-sh/website/issues/67) |
+| `flisk doctor` on native Windows reports one line and no diagnostics, because the Windows checks in `cli/src/utils/windows-doctor.ts` are never called. | `cli/src/commands/doctor.ts` | [#1856](https://github.com/flisk-sh/flisk/issues/1856) |
+| A path longer than 260 characters cannot even be created on a stock Windows host without long paths enabled, so an install or a project under such a path is out of reach. | Windows `MAX_PATH` | recorded by WH5 |
+
+A hosted runner is not a developer's Windows 11 machine: it has no Docker Desktop, no Tilt, no Bun and no antivirus. The acceptance run is the `hardware` job, on a machine a maintainer registers as a runner.
 
 ## See also
 
