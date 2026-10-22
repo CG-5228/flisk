@@ -28,7 +28,7 @@ These are the gaps between a hosted runner and a Windows 11 AMD64 developer mach
 
 ## Run it on a real Windows machine
 
-Requirements: Windows 10 22H2 or Windows 11 on AMD64, PowerShell 5.1 or newer (PowerShell 7 recommended, see gap 7), `tar.exe` (shipped with Windows 10 1803 and newer) and about 400 MB of free disk space for the download.
+Requirements: Windows 10 22H2 or Windows 11 on AMD64, PowerShell 5.1 or newer (PowerShell 7 recommended, see gap 8), `tar.exe` (shipped with Windows 10 1803 and newer) and about 600 MB of free disk space for the download and the copies the suite makes.
 
 ```powershell
 git clone https://github.com/flisk-sh/flisk.git

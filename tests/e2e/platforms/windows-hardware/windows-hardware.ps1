@@ -18,6 +18,7 @@
 #   FLISK_HARDWARE_REPORT       where the findings report is written (default: <work dir>\windows-hardware-findings.md)
 #   FLISK_WINDOWS_INSTALLER     the official installer to run (default: https://flisk.sh/install.ps1)
 #   FLISK_WINDOWS_DOWNLOAD_BASE where the release assets come from (default: the flisk-sh/releases download URL)
+#   FLISK_WINDOWS_RELEASE_REPOSITORY the repository the release comes from (default: flisk-sh/releases)
 #   FLISK_WINDOWS_GITHUB_TOKEN  a token for the GitHub API, so the release lookup does not hit the anonymous rate limit
 param(
   [ValidateSet('WH1', 'WH2', 'WH3', 'WH4', 'WH5', 'all')]
