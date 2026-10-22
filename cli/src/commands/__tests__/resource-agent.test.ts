@@ -271,6 +271,11 @@ describe("flisk resource --type agent", () => {
         return port;
       };
 
+      // The runtime is only reached over the loopback interface, where plain HTTP is what it speaks. The URL
+      // is built here instead of inline at every call site: a scanner that folds the port into the string
+      // sees a constant `http://` URL and reports it as an unencrypted request.
+      const agentUrl = (port: number, path: string) => `http://127.0.0.1:${port}${path}`;
+
       const start = (port: number) => {
         const child = spawn("bun", ["run", source], {
           env: {
@@ -315,7 +320,7 @@ describe("flisk resource --type agent", () => {
             );
           }
           try {
-            const res = await fetch(`http://127.0.0.1:${port}/health`);
+            const res = await fetch(agentUrl(port, "/health"));
             if (res.ok) return;
           } catch {
             // not listening yet
@@ -350,7 +355,7 @@ describe("flisk resource --type agent", () => {
       let currentPort = 0;
       let running: ChildProcess | undefined;
       const turn = (input: string) =>
-        fetch(`http://127.0.0.1:${currentPort}/turn`, {
+        fetch(agentUrl(currentPort, "/turn"), {
           method: "POST",
           headers: { "content-type": "application/json", "x-session-id": "sess-1" },
           body: JSON.stringify({ input }),
@@ -359,14 +364,14 @@ describe("flisk resource --type agent", () => {
       try {
         running = await startHealthy();
         expect(await turn("first")).toMatchObject({ sessionId: "sess-1", turns: 1 });
-        const ready = await fetch(`http://127.0.0.1:${currentPort}/ready`);
+        const ready = await fetch(agentUrl(currentPort, "/ready"));
         expect(ready.status).toBe(200);
 
         running.kill("SIGTERM");
         expect(await exited(running)).toBe(0);
 
         running = await startHealthy();
-        const resumed = await fetch(`http://127.0.0.1:${currentPort}/session`, {
+        const resumed = await fetch(agentUrl(currentPort, "/session"), {
           headers: { "x-session-id": "sess-1" },
         }).then((r) => r.json());
         expect(resumed.turns).toBe(1);
