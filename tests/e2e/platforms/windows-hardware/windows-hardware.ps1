@@ -278,9 +278,10 @@ function Write-FindingsReport {
   $lines += '| Case | Check | Result | Notes |'
   $lines += '| --- | --- | --- | --- |'
   foreach ($result in $results) {
-    $note = @($result.Observations) -join ' '
-    if ($result.Detail) { $note = if ($note) { "$note $($result.Detail)" } else { $result.Detail } }
-    $note = $note -replace '\|', '/'
+    $parts = @()
+    if ($result.Detail) { $parts += [string]$result.Detail }
+    $parts += @($result.Observations)
+    $note = (($parts -join '; ') -replace '\|', '/')
     $lines += "| $($result.Case) | $($result.Title) | $($result.Status) | $note |"
   }
   $lines += ''
@@ -288,6 +289,12 @@ function Write-FindingsReport {
   $reportDirectory = Split-Path -Parent $script:Report
   if ($reportDirectory) { New-Item -ItemType Directory -Force -Path $reportDirectory | Out-Null }
   Set-Content -LiteralPath $script:Report -Value ($lines -join "`n") -Encoding UTF8
+  # The raw output belongs with the report, so the artifact holds the evidence and not only the summary.
+  if ($reportDirectory) {
+    Get-ChildItem -LiteralPath $script:WorkDir -File -ErrorAction SilentlyContinue |
+      Where-Object { $_.Name -like 'run-*' -or $_.Name -like 'installer.*' } |
+      Copy-Item -Destination $reportDirectory -Force
+  }
   Write-Step "findings written to $script:Report"
 }
 
