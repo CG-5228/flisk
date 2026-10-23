@@ -89,6 +89,10 @@ def _run_pre_flight_validations(resource_name, resource_path, manifest, ctx):
     return report
 
 
+def _sh_quote(value):
+    return "'" + str(value).replace("'", "'\\''") + "'"
+
+
 def _escape_for_double_quoted_shell(value):
     escaped = str(value)
     escaped = escaped.replace("\\", "\\\\")
@@ -484,8 +488,8 @@ def _generate_yaml_manifest(resource_path, manifest, write_file):
     
     # Check if YAML already exists and is up-to-date by comparing with JSON
     json_path = resource_path + "/" + MANIFEST_FILENAME
-    json_mtime = local("stat -f %m " + json_path + " 2>/dev/null || stat -c %Y " + json_path + " 2>/dev/null || echo 0", quiet=True)
-    yaml_mtime = local("stat -f %m " + yaml_path + " 2>/dev/null || stat -c %Y " + yaml_path + " 2>/dev/null || echo 0", quiet=True)
+    json_mtime = local("stat -f %m " + _sh_quote(json_path) + " 2>/dev/null || stat -c %Y " + _sh_quote(json_path) + " 2>/dev/null || echo 0", quiet=True)
+    yaml_mtime = local("stat -f %m " + _sh_quote(yaml_path) + " 2>/dev/null || stat -c %Y " + _sh_quote(yaml_path) + " 2>/dev/null || echo 0", quiet=True)
     
     if str(json_mtime).strip() <= str(yaml_mtime).strip() and yaml_mtime != "0":
         # YAML is up-to-date, skip generation
@@ -495,7 +499,7 @@ def _generate_yaml_manifest(resource_path, manifest, write_file):
     # NOTE: Path relative to Flisk CLI installation root (where this file is located)
     # json_to_yaml.py is in engine/topologies/tilt/manifest/ relative to tdk-cli root
     converter_path = "engine/topologies/tilt/manifest/json_to_yaml.py"
-    yaml_content = str(local("python3 " + converter_path + " " + json_path, quiet=True)).strip()
+    yaml_content = str(local("python3 " + _sh_quote(converter_path) + " " + _sh_quote(json_path), quiet=True)).strip()
     write_file(yaml_path, yaml_content)
 
 

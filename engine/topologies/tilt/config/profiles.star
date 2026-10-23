@@ -32,6 +32,10 @@ RELEASE_PHASES = {
     "beta": FOCUS_BETA_EXPORT,
 }
 
+def _sh_quote(value):
+    return "'" + str(value).replace("'", "'\\''") + "'"
+
+
 def expand_release_targets(targets):
     """Expand release phase targets (pre-alpha, alpha, beta) to service lists."""
     expanded = []
@@ -148,7 +152,7 @@ def _load_focus_lists():
     ]
     
     for spec_path in spec_paths:
-        check_cmd = "test -f '{}' && echo 'yes' || echo 'no'".format(spec_path)
+        check_cmd = "test -f {0} && echo 'yes' || echo 'no'".format(_sh_quote(spec_path))
         exists = str(local(check_cmd, quiet=True, echo_off=True)).strip() == 'yes'
         if exists:
             # Parse PRE_ALPHA_RESOURCES from spec.master
@@ -156,7 +160,7 @@ def _load_focus_lists():
             alpha = []
             beta = []
             
-            content = str(local("cat '" + spec_path + "' 2>/dev/null || true", quiet=True, echo_off=True))
+            content = str(local("cat " + _sh_quote(spec_path) + " 2>/dev/null || true", quiet=True, echo_off=True))
             
             # Simple parsing for PRE_ALPHA_RESOURCES = {"key": True, ...}
             if "PRE_ALPHA_RESOURCES" in content:

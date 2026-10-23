@@ -21,6 +21,9 @@ e2e_init backend "backend-$LANGUAGE${FRAMEWORK:+-$FRAMEWORK}"
 STACK=shop
 API=api
 RESOURCES=("$API")
+# B1b/B2b: the directory name is literal (single quotes) and runs `touch` on the first unquoted Tilt local() call that uses it.
+PROBE_MARK=pwned_by_b1b
+PROBE_DIR='svc$(touch pwned_by_b1b)x'
 
 api_healthy() { [ "$(traefik_request "$API" /health -o /dev/null -w '%{http_code}')" = "200" ]; }
 api_container() { running_container "$API"; }
@@ -31,12 +34,27 @@ B1() { # scaffold a backend in the language under test
   [ -d "$DIR/services/$STACK/$API" ] || die "scaffolded backend directory missing under services/$STACK/$API"
 }
 
+B1b() { # regression for the unquoted Tilt local() path (manifest_resource.star): a service directory named with command substitution
+  log "B1b add a service directory whose name runs a command if the generator does not quote it"
+  mkdir -p "$DIR/services/$STACK/$PROBE_DIR"
+  jq '.name = "probe"' "$DIR/services/$STACK/$API/service.json" >"$DIR/services/$STACK/$PROBE_DIR/service.json"
+}
+
+probe_listed() { status_json | jq -e '.data.resources[] | select(.name=="probe")' >/dev/null; }
+
 B2() { # flisk up, then the backend is listed as a backend in flisk status
   log "B2 flisk up and status lists $API as a $LANGUAGE backend"
   : >"$DIR/up.log"
   start_stack "$STACK"
   wait_status_url "$API"
   common_wait_status "$API" backend
+}
+
+B2b() { # the probe directory was discovered, and the command in its name did not run
+  log "B2b probe directory is discovered and its name ran no command"
+  poll_until "probe listed in flisk status" "$READY_TIMEOUT" probe_listed
+  local hits; hits="$(find "$DIR" -name "$PROBE_MARK" -print)"
+  [ -z "$hits" ] || die "a command in a service directory name ran; marker found at: $hits"
 }
 
 B3() { # the routed health check answers 200 through Traefik
