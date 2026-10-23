@@ -85,4 +85,4 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - uses: flisk-sh/codeql-starlark@562d2f4be1d242a8b9074cccfec55e8bfc6dd38a # fix/composite-action, repin to main once merged
+      - uses: flisk-sh/codeql-starlark@125de39bd5b98c435d8b333c93cf8d2ec5bf9042 # main
