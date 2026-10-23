@@ -15,14 +15,14 @@ import {
 } from "../../utils/constants.js";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
-const cliBin = join(repoRoot, "cli", "bin", "tdk.js");
+const cliBin = join(repoRoot, "cli", "bin", "flisk.js");
 
 function flisk(args: string[], cwd: string, input = "y\n") {
   return spawnSync(process.execPath, [cliBin, ...args], {
     cwd,
     encoding: "utf-8",
     input,
-    env: { ...process.env, TDK_EXTENSION_SOURCE: repoRoot },
+    env: { ...process.env, FLISK_EXTENSION_SOURCE: repoRoot },
   });
 }
 
@@ -80,7 +80,7 @@ describe("flisk resource --type mcp", () => {
     projectRoot = mkdtempSync(join(tmpdir(), "flisk-mcp-"));
     execFileSync(process.execPath, [cliBin, "project", "--yes"], {
       cwd: projectRoot,
-      env: { ...process.env, TDK_EXTENSION_SOURCE: repoRoot },
+      env: { ...process.env, FLISK_EXTENSION_SOURCE: repoRoot },
     });
   }, 30000);
 

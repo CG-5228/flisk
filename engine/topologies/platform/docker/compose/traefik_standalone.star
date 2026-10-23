@@ -80,12 +80,12 @@ volumes:
             name=name,
             gateway_container=PlatformDockerConstants.TRAEFIK_WAKE_GATEWAY_CONTAINER,
             gateway_port=PlatformDockerConstants.TRAEFIK_WAKE_GATEWAY_PORT,
-            vendored_gateway_dir="tdk-cli-ext/engine/assets/docker/wake-gateway",
+            vendored_gateway_dir="flisk-cli-ext/engine/assets/docker/wake-gateway",
             tilt_dev_dir=os.environ.get("HOME", "") + "/.tilt-dev",
             project_root_mount=_project_root_mount(),
         ) if sablier_enabled else "",
         dynamic_dir_name=PlatformDockerConstants.TRAEFIK_DYNAMIC_DIR_REL.split("/")[-1],
-        vendored_gateway_dir="tdk-cli-ext/engine/assets/docker/wake-gateway",
+        vendored_gateway_dir="flisk-cli-ext/engine/assets/docker/wake-gateway",
         gateway_container=PlatformDockerConstants.TRAEFIK_WAKE_GATEWAY_CONTAINER,
         gateway_port=PlatformDockerConstants.TRAEFIK_WAKE_GATEWAY_PORT,
         tilt_dev_dir=os.environ.get("HOME", "") + "/.tilt-dev",
@@ -102,7 +102,7 @@ def _project_root_mount():
     itself (bypassing Tilt's build queue), using the compose files Tilt uses.
     Compose resolves relative paths in them (env_file etc.) client-side, so
     they must exist at the same absolute paths inside the gateway container.
-    Empty when TDK_PROJECT_ROOT is unset (the generated Tiltfile sets it).
+    Empty when FLISK_PROJECT_ROOT is unset (the generated Tiltfile sets it).
     """
     root = project_root_abspath()
     if not root:
@@ -111,8 +111,8 @@ def _project_root_mount():
 
 
 def project_root_abspath():
-    """Absolute, normalized project root (TDK_PROJECT_ROOT), or "" when unset."""
-    return normalize_abs_path(os.environ.get("TDK_PROJECT_ROOT", ""))
+    """Absolute, normalized project root (FLISK_PROJECT_ROOT), or "" when unset."""
+    return normalize_abs_path(os.environ.get("FLISK_PROJECT_ROOT", ""))
 
 
 _SABLIER_DEPENDS_ON = """    depends_on:
