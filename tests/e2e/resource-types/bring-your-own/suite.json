@@ -33,6 +33,12 @@
       "id": "example-lobster",
       "case": "BY1",
       "args": "lobster /health"
+
+    },
+    {
+      "id": "example-goose",
+      "case": "BY1",
+      "args": "goose /health"
     },
     {
       "id": "flisk",
