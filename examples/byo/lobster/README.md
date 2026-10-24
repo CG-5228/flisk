@@ -8,6 +8,11 @@ image build time, served by BusyBox `httpd` on Alpine
 (`for([..]) x:`, `\{` escapes, `write_file` with a relative path, top-level `return 1`) comes from reading the docs, not from running it.
 The Linux release binary may need further shared libraries beyond the ones listed in the notes.
 
+**Diagnostic mode (temporary):** the build does **not** fail when Lobster fails. Lobster's output and a few directory listings are
+written to `/build.log`, and the container prints the last 14 lines of it at startup, before `httpd`. If Lobster did not write
+`www/health`, `/health` answers 404 and the check fails, so `/health` returning 200 is still the real gate. CI builds with
+`docker build -q >/dev/null`, which is why the log is printed at run time instead. Remove this once the example passes.
+
 **Notes:**
 - Lobster is not the server. I found no network builtins in its builtin reference (only Steam peer-to-peer ones), so a Lobster program
   cannot answer HTTP. The Dockerfile's first stage runs `lobster orders.lobster` once while the image is built, which writes

@@ -13,14 +13,19 @@ RUN curl -fsSL -o /tmp/lobster.zip "https://github.com/aardappel/lobster/release
  && rm /tmp/lobster.zip
 WORKDIR /site
 COPY orders.lobster ./
-# The build output is quiet in CI, so a failure prints the linker view, Lobster's own output and the file listing before exiting.
-# The script writes absolute paths (/site/www/...): the docs do not say what a relative write_file path resolves against.
-RUN mkdir -p /site/www && { /opt/lobster/bin/lobster orders.lobster && test -s /site/www/health; } \
- || { echo "lobster failed (exit $?)" >&2; ldd /opt/lobster/bin/lobster >&2; /opt/lobster/bin/lobster orders.lobster 2>&1 >&2; ls -la /site /site/www >&2; exit 1; }
+# CI builds with `docker build -q >/dev/null`, so nothing printed here is ever seen. A Lobster error therefore does not fail the build:
+# its output goes to /site/build.log, the final image prints that log at startup, and a missing www/health makes /health 404, which fails
+# the check and shows the log. The script writes absolute paths because the docs do not say what a relative write_file path resolves against.
+RUN mkdir -p /site/www \
+ && { /opt/lobster/bin/lobster orders.lobster 2>&1; echo "lobster exit code: $?"; \
+      echo "www: $(ls /site/www | tr '\n' ' ')"; echo "bin: $(ls /opt/lobster/bin | tr '\n' ' ')"; \
+      echo "modules: $(ls /opt/lobster/modules 2>&1 | head -c 120 | tr '\n' ' ')"; \
+      echo "ldd missing: $(ldd /opt/lobster/bin/lobster 2>&1 | grep -c 'not found')"; } > /site/build.log 2>&1 || true
 
 FROM alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
 COPY --from=generate /site/www /www
+COPY --from=generate /site/build.log /build.log
 RUN addgroup -g 1000 -S app && adduser -u 1000 -S -G app app
 USER app
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 CMD nc -z 127.0.0.1 ${PORT:-3000} || exit 1
-CMD ["sh", "-c", "exec httpd -f -p 0.0.0.0:${PORT:-3000} -h /www"]
+CMD ["sh", "-c", "tail -n 14 /build.log >&2; exec httpd -f -p 0.0.0.0:${PORT:-3000} -h /www"]
