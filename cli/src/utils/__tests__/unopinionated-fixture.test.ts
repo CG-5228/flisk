@@ -12,7 +12,7 @@ describe("unopinionated fixture", () => {
   it("declares a service.json with the minimal contract", () => {
     const service = JSON.parse(readFileSync(join(FIXTURE, "service.json"), "utf8"));
     expect(service.name).toBe("unopinionated-api");
-    expect(service.port).toBe(3000);
+    expect(service.port).toBe(4000);
     expect(service.dev.command).toBe("node server.js");
   });
 
