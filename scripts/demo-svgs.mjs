@@ -139,8 +139,8 @@ function aiDemo() {
 
   const steps = [
     ["Create the project", "flisk project --yes"],
-    ["Add the orders API", "flisk resource orders-api --type backend"],
-    ["Add the storefront", "flisk resource shop-web --type frontend"],
+    ["Add the orders API", "flisk resource orders-api --type backend --stack shop --yes"],
+    ["Add the storefront", "flisk resource shop-web --type frontend --stack shop --yes"],
     ["Start everything", "flisk up shop"],
   ];
   steps.forEach(([label, command], i) => {
@@ -159,13 +159,13 @@ function aiDemo() {
   s.show(sansText(left, 392, "Flisk prints where your shop will be on your computer:", { size: 15.5 }), 10.0);
   s.show(`<rect x="${left - 12}" y="406" width="${900 - 2 * (left - 12)}" height="78" rx="10" fill="${C.slate}"/>`, 10.4);
   s.show(
-    sansText(left, 437, "Storefront", { size: 14, color: C.mist }) +
-      monoText(170, 437, URLS.storefront, { size: 14.5, color: C.signal }),
+    sansText(left, 437, "Storefront health", { size: 14, color: C.mist }) +
+      monoText(180, 437, URLS.storefront, { size: 14.5, color: C.signal }),
     10.6,
   );
   s.show(
-    sansText(left, 467, "Orders API", { size: 14, color: C.mist }) +
-      monoText(170, 467, URLS.api, { size: 14.5, color: C.signal }),
+    sansText(left, 467, "Orders API health", { size: 14, color: C.mist }) +
+      monoText(180, 467, URLS.api, { size: 14.5, color: C.signal }),
     10.9,
   );
   s.show(
