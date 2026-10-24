@@ -28,4 +28,5 @@ COPY --from=generate /site/build.log /build.log
 RUN addgroup -g 1000 -S app && adduser -u 1000 -S -G app app
 USER app
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 CMD nc -z 127.0.0.1 ${PORT:-3000} || exit 1
-CMD ["sh", "-c", "tail -n 14 /build.log >&2; exec httpd -f -p 0.0.0.0:${PORT:-3000} -h /www"]
+# If httpd cannot start, print the build log again and stay up for 120 seconds, so the check can still read `docker logs`.
+CMD ["sh", "-c", "tail -n 14 /build.log >&2; httpd -f -p 0.0.0.0:${PORT:-3000} -h /www || { echo 'httpd failed to start' >&2; tail -n 12 /build.log >&2; sleep 120; }"]

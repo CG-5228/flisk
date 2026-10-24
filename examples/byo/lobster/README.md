@@ -10,7 +10,8 @@ The Linux release binary may need further shared libraries beyond the ones liste
 
 **Diagnostic mode (temporary):** the build does **not** fail when Lobster fails. Lobster's output and a few directory listings are
 written to `/build.log`, and the container prints the last 14 lines of it at startup, before `httpd`. If Lobster did not write
-`www/health`, `/health` answers 404 and the check fails, so `/health` returning 200 is still the real gate. CI builds with
+`www/health`, `/health` answers 404 and the check fails, so `/health` returning 200 is still the real gate. If `httpd` itself fails to start, the container prints the log again and sleeps for
+120 seconds instead of exiting, so the check can still read `docker logs`. The example has not passed a real run. CI builds with
 `docker build -q >/dev/null`, which is why the log is printed at run time instead. Remove this once the example passes.
 
 **Notes:**
