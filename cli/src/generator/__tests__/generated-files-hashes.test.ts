@@ -7,7 +7,11 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { EXTENSION_DIRS, resolveExtensionDir, resolveTiltfile } from "../../utils/runtime-layout.js";
+import {
+  EXTENSION_DIRS,
+  resolveExtensionDir,
+  resolveTiltfile,
+} from "../../utils/runtime-layout.js";
 import { generateMasterConfigs, isTestFile } from "../template-engine.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
@@ -59,11 +63,20 @@ const GENERATED: Array<{ file: string; sha256: string; contains: string[] }> = [
     contains: ['"name": "hash-proj"', '"private": true', '"services/*/*"'],
   },
   ...[
-    ["bun-hoisted-symlink-fix.sh", "2655a4c8e3d3bf804ad38c1c4c600d4d54b11c492854b6fdb60bf1bd0fe142c9"],
+    [
+      "bun-hoisted-symlink-fix.sh",
+      "2655a4c8e3d3bf804ad38c1c4c600d4d54b11c492854b6fdb60bf1bd0fe142c9",
+    ],
     ["infisical-entrypoint.sh", "7e273f36ac4e50bdd2d75d74223d6a41b2cdca128805c3cc843871d669c167d0"],
     ["install-deps.sh", "40f31ca2b117524973d669f3e83a902ea7a43da5194f48ef451f909f20946a3c"],
-    ["prisma-bun-client-link-fix.sh", "d3cacdec2fdf072fcd0eae548283bdef1bbdadfcbd9924002a48732bf65984ad"],
-    ["prisma-normalize-client.sh", "0fd37a4acf569c3a5bc82f5bddfa654c47d81c77e3742274c28051a7bb5f22d6"],
+    [
+      "prisma-bun-client-link-fix.sh",
+      "d3cacdec2fdf072fcd0eae548283bdef1bbdadfcbd9924002a48732bf65984ad",
+    ],
+    [
+      "prisma-normalize-client.sh",
+      "0fd37a4acf569c3a5bc82f5bddfa654c47d81c77e3742274c28051a7bb5f22d6",
+    ],
   ].map(([name, hash]) => ({
     file: `shared-platform-engineering/docker-templates/${name}`,
     sha256: hash as string,
@@ -111,14 +124,17 @@ describe("generated project files", () => {
     fs.rmSync(projectRoot, { recursive: true, force: true });
   });
 
-  it.each(GENERATED)("$file has the expected content and sha256", ({ file, sha256: hash, contains }) => {
-    const full = path.join(projectRoot, file);
-    expect(fs.existsSync(full), `${file} exists`).toBe(true);
-    const text = fs.readFileSync(full, "utf-8");
-    expect(text.length).toBeGreaterThan(0);
-    for (const needle of contains) expect(text, `${file} contains ${needle}`).toContain(needle);
-    expect(sha256(full)).toBe(hash);
-  });
+  it.each(GENERATED)(
+    "$file has the expected content and sha256",
+    ({ file, sha256: hash, contains }) => {
+      const full = path.join(projectRoot, file);
+      expect(fs.existsSync(full), `${file} exists`).toBe(true);
+      const text = fs.readFileSync(full, "utf-8");
+      expect(text.length).toBeGreaterThan(0);
+      for (const needle of contains) expect(text, `${file} contains ${needle}`).toContain(needle);
+      expect(sha256(full)).toBe(hash);
+    },
+  );
 
   it("writes no generated file beyond the listed ones outside the vendored extension", () => {
     const vendored = path.join(projectRoot, ".flisk", ".flisk-out", "flisk-cli-ext");
@@ -139,7 +155,9 @@ describe("generated project files", () => {
   it("copies the docker templates byte for byte from the source tree", () => {
     const sourceDir = path.join(repoRoot, "shared-platform-engineering", "docker-templates");
     const copiedDir = path.join(projectRoot, "shared-platform-engineering", "docker-templates");
-    const sources = fs.readdirSync(sourceDir).filter((name) => fs.statSync(path.join(sourceDir, name)).isFile());
+    const sources = fs
+      .readdirSync(sourceDir)
+      .filter((name) => fs.statSync(path.join(sourceDir, name)).isFile());
     expect(sources.length).toBeGreaterThan(0);
     for (const name of sources) {
       expect(sha256(path.join(copiedDir, name)), name).toBe(sha256(path.join(sourceDir, name)));
@@ -156,7 +174,9 @@ describe("generated project files", () => {
       expect(expected.length, `${dir} has source files`).toBeGreaterThan(0);
       for (const source of expected) {
         const copy = path.join(vendored, dir, path.relative(sourceDir, source));
-        expect(fs.existsSync(copy), `${dir}/${path.relative(sourceDir, source)} vendored`).toBe(true);
+        expect(fs.existsSync(copy), `${dir}/${path.relative(sourceDir, source)} vendored`).toBe(
+          true,
+        );
         expect(sha256(copy)).toBe(sha256(source));
         compared++;
       }
