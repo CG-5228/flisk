@@ -46,6 +46,11 @@ jobs:
         with:
           node-version: 22
 
+      # `flisk project` checks for Bun 1.2+; same pinned action as .github/actions/setup-bun.
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
       # Same pinned release and checksum as .github/actions/setup-tilt; installed under $HOME so no sudo is needed.
       - name: Install Tilt
         run: |
@@ -62,6 +67,7 @@ jobs:
       - name: Tool versions
         run: |
           echo "docker: $(docker --version)"
+          echo "bun: $(bun --version)"
           echo "tilt: $(tilt version)"
           echo "flisk: $(flisk --version)"
 
