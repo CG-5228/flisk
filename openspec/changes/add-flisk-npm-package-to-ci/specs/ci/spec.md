@@ -45,3 +45,31 @@ Adding `npm-package-smoke` SHALL NOT remove or weaken existing CI jobs, includin
 
 - **WHEN** the CI workflow runs after this change
 - **THEN** `package-smoke` and the existing lint, typecheck, test, and package jobs continue to run
+
+### Requirement: Package contents are checked before and after publish
+
+CI SHALL run `scripts/check-npm-package.mjs` on the root package pack in the `package` job and on the pinned registry tarball in `npm-package-smoke`. The check SHALL fail when the package ships test files, ships a path outside the allowlist, or does not declare `"type": "module"`.
+
+#### Scenario: A test file would ship
+
+- **WHEN** the pack contains a path under `__tests__/` or `tests/`, a `*.test.*` or `*.spec.*` file, or a `test_*.py` file
+- **THEN** the check exits non-zero and lists each such path
+
+#### Scenario: An unexpected path would ship
+
+- **WHEN** the pack contains a path outside `cli/bin`, `cli/dist`, `cli/dist-bundle`, `cli/templates`, `cli/shared-platform-engineering/docker-templates`, `runtime/`, `examples/tdk-example/`, or the top-level `package.json`, `README.md`, `LICENSE`, `CHANGELOG.md`
+- **THEN** the check exits non-zero and lists each such path
+
+#### Scenario: The module format is not declared
+
+- **WHEN** the packaged `package.json` has no `"type": "module"`
+- **THEN** the check exits non-zero, because registry sites otherwise report the ESM CLI as CommonJS
+
+### Requirement: The pinned version has provenance
+
+`npm-package-smoke` SHALL fail when the pinned registry version has no SLSA provenance attestation.
+
+#### Scenario: Provenance is missing
+
+- **WHEN** `npm view @flisk-sh/flisk@<pin> dist.attestations.provenance.predicateType` is not `https://slsa.dev/provenance/v1`
+- **THEN** the job exits non-zero and names the version

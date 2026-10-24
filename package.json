@@ -11,6 +11,7 @@
     "url": "https://github.com/flisk-sh/flisk/issues"
   },
   "private": false,
+  "type": "module",
   "workspaces": [
     "cli"
   ],

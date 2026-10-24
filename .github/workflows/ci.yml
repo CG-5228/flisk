@@ -357,11 +357,11 @@ jobs:
           bun install --frozen-lockfile
           npm run build
 
-      # The root @flisk-sh/flisk package is what npm users install. Fail if its
-      # "files" list would ship test files (1.4.0 did).
-      - name: Check the root npm package ships no test files
+      # The root @flisk-sh/flisk package is what npm users install. Fail if it would ship
+      # test files (1.4.0 did), paths outside the allowlist, or lose "type": "module".
+      - name: Check the root npm package contents
         run: |
-          npm pack --dry-run --ignore-scripts --json | node scripts/check-npm-pack-tests.mjs
+          npm pack --dry-run --ignore-scripts --json | node scripts/check-npm-package.mjs --manifest package.json
 
       # cli/dist is committed so `npm install -g github:flisk-sh/flisk`
       # works without a build step. Fail if a source change was committed
@@ -462,14 +462,29 @@ jobs:
             *) echo "::error::flisk --version (${installed}) does not match pinned ${pinned}"; exit 1 ;;
           esac
 
-      # The registry tarball is what npm users get. Fail if it contains test files.
-      - name: Check the published tarball ships no test files
+      # The registry tarball is what npm users get (and what npmx.dev shows). Run the same
+      # package checks on it: no test files, allowlisted paths only, "type": "module".
+      - name: Check the published tarball contents
         run: |
           pinned="$(node -p "require('./.github/npm-package-smoke/package.json').dependencies['@flisk-sh/flisk']")"
           npm pack "@flisk-sh/flisk@${pinned}" --pack-destination "${RUNNER_TEMP}" --silent
+          mkdir -p "${RUNNER_TEMP}/published"
+          tar -xzf "${RUNNER_TEMP}/flisk-sh-flisk-${pinned}.tgz" -C "${RUNNER_TEMP}/published"
           tar -tzf "${RUNNER_TEMP}/flisk-sh-flisk-${pinned}.tgz" \
             | node -e 'const fs = require("node:fs"); const files = fs.readFileSync(0, "utf8").split("\n").filter(Boolean).map((p) => ({ path: p.replace(/^package\//, "") })); console.log(JSON.stringify([{ files }]));' \
-            | node scripts/check-npm-pack-tests.mjs
+            | node scripts/check-npm-package.mjs --manifest "${RUNNER_TEMP}/published/package/package.json"
+
+      # Releases publish with --provenance from release-binaries.yml. Fail if the pinned
+      # version lacks an SLSA provenance attestation on the registry.
+      - name: Check the published version has provenance
+        run: |
+          pinned="$(node -p "require('./.github/npm-package-smoke/package.json').dependencies['@flisk-sh/flisk']")"
+          predicate="$(npm view "@flisk-sh/flisk@${pinned}" dist.attestations.provenance.predicateType)"
+          if [ "${predicate}" != "https://slsa.dev/provenance/v1" ]; then
+            echo "::error::@flisk-sh/flisk@${pinned} has no SLSA provenance on npm (got '${predicate}')"
+            exit 1
+          fi
+          echo "@flisk-sh/flisk@${pinned} provenance: ${predicate}"
 
   secret-scan:
     name: 🔑 Secret Scan
