@@ -357,6 +357,12 @@ jobs:
           bun install --frozen-lockfile
           npm run build
 
+      # The root @flisk-sh/flisk package is what npm users install. Fail if its
+      # "files" list would ship test files (1.4.0 did).
+      - name: Check the root npm package ships no test files
+        run: |
+          npm pack --dry-run --ignore-scripts --json | node scripts/check-npm-pack-tests.mjs
+
       # cli/dist is committed so `npm install -g github:flisk-sh/flisk`
       # works without a build step. Fail if a source change was committed
       # without rebuilding it.
