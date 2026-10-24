@@ -462,6 +462,15 @@ jobs:
             *) echo "::error::flisk --version (${installed}) does not match pinned ${pinned}"; exit 1 ;;
           esac
 
+      # The registry tarball is what npm users get. Fail if it contains test files.
+      - name: Check the published tarball ships no test files
+        run: |
+          pinned="$(node -p "require('./.github/npm-package-smoke/package.json').dependencies['@flisk-sh/flisk']")"
+          npm pack "@flisk-sh/flisk@${pinned}" --pack-destination "${RUNNER_TEMP}" --silent
+          tar -tzf "${RUNNER_TEMP}/flisk-sh-flisk-${pinned}.tgz" \
+            | node -e 'const fs = require("node:fs"); const files = fs.readFileSync(0, "utf8").split("\n").filter(Boolean).map((p) => ({ path: p.replace(/^package\//, "") })); console.log(JSON.stringify([{ files }]));' \
+            | node scripts/check-npm-pack-tests.mjs
+
   secret-scan:
     name: 🔑 Secret Scan
     runs-on: ubuntu-26.04
