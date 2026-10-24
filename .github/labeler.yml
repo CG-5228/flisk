@@ -53,7 +53,7 @@
   - changed-files:
       - any-glob-to-any-file:
           - "runtime/engine/**"
-          - "Tiltfile"
+          - "runtime/Tiltfile"
 
 "area: discovery":
   - changed-files:
@@ -279,7 +279,7 @@ ci:
 "tech: tilt":
   - changed-files:
       - any-glob-to-any-file:
-          - "Tiltfile"
+          - "runtime/Tiltfile"
           - "runtime/engine/**/*.star"
           - "runtime/discovery/**/*.star"
           - "runtime/ext/Tiltfile"
@@ -309,7 +309,7 @@ ci:
   - changed-files:
       - any-glob-to-any-file:
           - "**/*.star"
-          - "Tiltfile"
+          - "runtime/Tiltfile"
           - "runtime/engine/Tiltfile"
           - "runtime/discovery/Tiltfile"
 
