@@ -466,12 +466,14 @@ jobs:
       - name: Verify the installed version
         run: |
           pinned="$(node -p "require('./.github/npm-package-smoke/package.json').dependencies['@flisk-sh/flisk']")"
-          installed="$(./.github/npm-package-smoke/node_modules/.bin/flisk --version)"
+          # flisk --version prints the bare version on stdout (notices go to stderr); compare it whole,
+          # so a pin of 1.4.0 does not accept 11.4.0.
+          installed="$(./.github/npm-package-smoke/node_modules/.bin/flisk --version | tail -n 1 | tr -d '[:space:]')"
           echo "Pinned: ${pinned}  Installed: ${installed}"
-          case "${installed}" in
-            *"${pinned}"*) ;;
-            *) echo "::error::flisk --version (${installed}) does not match pinned ${pinned}"; exit 1 ;;
-          esac
+          if [ "${installed}" != "${pinned}" ]; then
+            echo "::error::flisk --version (${installed}) does not match pinned ${pinned}"
+            exit 1
+          fi
 
       # Releases publish with --provenance from release-binaries.yml. Fail if the pinned
       # version lacks an SLSA provenance attestation on the registry.

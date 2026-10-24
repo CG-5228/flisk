@@ -10,8 +10,8 @@
 // - has a "bin" entry that is not in the tarball, or no "engines.node".
 import { execFileSync } from "node:child_process";
 
-const TEST_PATH =
-  /(^|\/)(__tests__|tests)\/|\.test\.[cm]?[jt]sx?$|\.spec\.[cm]?[jt]sx?$|(^|\/)test_[^/]*\.py$|_test\.py$/;
+// Any "*.test.*" or "*.spec.*" file counts, whatever the extension (.ts, .py, .star, ...).
+const TEST_PATH = /(^|\/)(__tests__|tests)\/|\.(test|spec)\.[^/]+$|(^|\/)test_[^/]*\.py$|_test\.py$/;
 
 // Every shipped path starts with one of these. examples/tdk-example backs `flisk project example`;
 // runtime/ holds the Tiltfile, engine, discovery, specs and ext that `flisk up` loads.

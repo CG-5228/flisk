@@ -30,8 +30,15 @@ test("flags test files in every shape the package used to ship", () => {
     "runtime/engine/topologies/tilt/manifest/tests/test_manifest.star",
     "runtime/discovery/test_resource_snapshot.py",
     "runtime/ext/ide-components/shared/test_config_service.py",
+    "runtime/engine/example.test.py",
+    "runtime/specs/example.spec.star",
+    "cli/dist/x.spec.d.ts",
   ];
   assert.deepEqual(findTestFiles(paths), paths);
+});
+
+test("does not mistake spec.master templates for spec files", () => {
+  assert.deepEqual(findTestFiles(["cli/templates/spec.master.hbs", "runtime/engine/spec.master.example"]), []);
 });
 
 test("keeps shipped runtime and CLI files", () => {
