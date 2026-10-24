@@ -9,7 +9,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 /** The CLI entry point the tests run, resolved once. */
 export const fliskBin = path.resolve(here, "../../bin/flisk.js");
 
-export interface RunFliskOptions {
+export interface FliskRunOptions {
   cwd: string;
   /** Written to the child's stdin. */
   input?: string;
@@ -19,7 +19,7 @@ export interface RunFliskOptions {
   timeout?: number;
 }
 
-export interface RunFliskResult {
+export interface FliskRunResult {
   status: number;
   stdout: string;
   stderr: string;
@@ -30,7 +30,7 @@ export interface RunFliskResult {
  * Throws when the child could not run to completion (spawn error, timeout or signal), so a test never reads
  * `status: null` as an exit code.
  */
-export function runFlisk(args: readonly string[], options: RunFliskOptions): RunFliskResult {
+export function runFlisk(args: readonly string[], options: FliskRunOptions): FliskRunResult {
   const env: Record<string, string | undefined> = { ...process.env, NO_COLOR: "1", ...options.env };
   for (const key of Object.keys(env)) {
     if (env[key] === undefined) delete env[key];
