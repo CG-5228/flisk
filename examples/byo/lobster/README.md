@@ -22,6 +22,9 @@ written to `/build.log`, and the container prints the last 14 lines of it at sta
   even though this script is headless. `debian:bookworm-slim` does not ship the two GL libraries, so the generate stage installs
   `libopengl0` and `libglx0`. A first CI run failed with exit 127 at the `lobster` step before this was added; the cause is inferred
   from the binary's ELF header, not yet confirmed by a passing run.
+- The generate stage is `debian:trixie-slim`: the v2026.8 release needs GLIBC_2.38 and GLIBCXX_3.4.32, which `bookworm` lacks (seen in
+  a CI log, not reproduced here). The final stage installs `busybox-extras`, because the `httpd` applet is not in Alpine 3.20's
+  `busybox`. I checked the `busybox-extras-1.36.1-r31` package: it lists `usr/sbin/httpd`. I did not run the image.
 - The release zip is pinned by version and sha256 in the Dockerfile; base images are digest-pinned.
 - Fallback if the release binary cannot run headless: build Lobster from source with `cmake -DLOBSTER_ENGINE=OFF`. Not tried.
 

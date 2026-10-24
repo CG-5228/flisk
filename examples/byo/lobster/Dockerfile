@@ -1,7 +1,8 @@
 # Lobster has no network builtins, so a Lobster program cannot be the HTTP server. This image runs one at build time
 # to write the response files, then serves them with BusyBox httpd.
 # The release binary links libOpenGL and libGLX even for a headless script, so the generate stage installs them.
-FROM debian:bookworm-slim@sha256:7ff6ba31527b9e336162fa061746c366c4b2032f4d2cff2078bea43f78efe3f8 AS generate
+# trixie, not bookworm: the v2026.8 release needs GLIBC_2.38 and GLIBCXX_3.4.32, which bookworm does not have.
+FROM debian:trixie-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad AS generate
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates curl unzip libopengl0 libglx0 libstdc++6 \
  && rm -rf /var/lib/apt/lists/*
@@ -25,7 +26,9 @@ RUN mkdir -p /site/www \
 FROM alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
 COPY --from=generate /site/www /www
 COPY --from=generate /site/build.log /build.log
-RUN addgroup -g 1000 -S app && adduser -u 1000 -S -G app app
+# Alpine's busybox package has no httpd applet; busybox-extras ships usr/sbin/httpd.
+RUN apk add --no-cache busybox-extras \
+ && addgroup -g 1000 -S app && adduser -u 1000 -S -G app app
 USER app
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 CMD nc -z 127.0.0.1 ${PORT:-3000} || exit 1
 # If httpd cannot start, print the build log again and stay up for 120 seconds, so the check can still read `docker logs`.
