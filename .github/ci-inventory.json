@@ -147,6 +147,14 @@
 		},
 		{
 			"workflow": "ci.yml",
+			"job": "npm-package-smoke",
+			"tier": "test",
+			"required": false,
+			"reason": "Installs the pinned @flisk-sh/flisk from npm and checks its version on every non-docs PR",
+			"owner": "maintainers"
+		},
+		{
+			"workflow": "ci.yml",
 			"job": "secret-scan",
 			"tier": "gate",
 			"required": false,

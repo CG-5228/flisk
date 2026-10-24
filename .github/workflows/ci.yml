@@ -424,6 +424,41 @@ jobs:
           test -f services/shop/orders-api/service.json
           echo "✅ Installed package scaffolds a project and a resource"
 
+  npm-package-smoke:
+    name: 📦 Published npm Package Smoke Test
+    runs-on: ubuntu-26.04
+    needs: [changes]
+    # Skip on docs-only PRs; a skipped job still satisfies required checks.
+    if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
+    timeout-minutes: 3
+    env:
+      # Pinned exact version of @flisk-sh/flisk on the public npm registry. Bump deliberately.
+      FLISK_NPM_VERSION: 1.4.0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      # The installed CLI's cold start needs Bun on PATH (the check fails without it).
+      - uses: ./.github/actions/setup-bun # zizmor: ignore[self-repository] composite action resolves from this commit
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22.12
+
+      - name: Install the pinned package from npm
+        working-directory: ${{ runner.temp }}
+        run: |
+          npm install --global --no-audit --no-fund "@flisk-sh/flisk@${FLISK_NPM_VERSION}"
+
+      - name: Verify the installed version
+        working-directory: ${{ runner.temp }}
+        run: |
+          installed="$(flisk --version)"
+          echo "Installed: ${installed}"
+          case "${installed}" in
+            *"${FLISK_NPM_VERSION}"*) ;;
+            *) echo "::error::flisk --version (${installed}) does not match pinned ${FLISK_NPM_VERSION}"; exit 1 ;;
+          esac
+
   secret-scan:
     name: 🔑 Secret Scan
     runs-on: ubuntu-26.04
@@ -506,7 +541,7 @@ jobs:
     # script below.
     timeout-minutes: 35
     if: always()
-    needs: [lint, spellcheck, typecheck, test, package, package-smoke, secret-scan, dependency-review, workflow-audit]
+    needs: [lint, spellcheck, typecheck, test, package, package-smoke, npm-package-smoke, secret-scan, dependency-review, workflow-audit]
     permissions:
       contents: read
       checks: read # reads the e2e gates' check runs on the head commit
