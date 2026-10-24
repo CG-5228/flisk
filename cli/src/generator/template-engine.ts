@@ -26,6 +26,7 @@ import {
   validateServiceManifestFile,
 } from "../utils/service-manifest.js";
 import { discoverResourcesFromRoot, discoverServiceManifestPaths } from "../utils/services.js";
+import { EXTENSION_DIRS, hasExtensionLayout, resolveExtensionDir } from "../utils/runtime-layout.js";
 import { isStackFeatureEnabledInStacks } from "../utils/stack-features.js";
 import { hasSablierLicense, hasVerdaccioLicense } from "./extension-fetch.js";
 
@@ -692,7 +693,7 @@ function removeVendoredTestFiles(dir: string): void {
   }
 }
 
-const FLISK_EXTENSION_DIRS = ["engine", "discovery", "specs", "ext"] as string[];
+const FLISK_EXTENSION_DIRS: readonly string[] = EXTENSION_DIRS;
 const PROJECT_RUNTIME_ASSET_DIRS = [["shared-platform-engineering", "docker-templates"]] as const;
 const REQUIRED_DOCKER_TEMPLATE_FILES = [
   "install-deps.sh",
@@ -708,7 +709,7 @@ const REQUIRED_DOCKER_TEMPLATE_FILES = [
 function findSelfContainedEngineRoot(): string | null {
   let dir = import.meta.dirname || process.cwd();
   for (let i = 0; i < 6; i++) {
-    if (fs.existsSync(path.join(dir, "Tiltfile")) && fs.existsSync(path.join(dir, "engine"))) {
+    if (hasExtensionLayout(dir)) {
       return dir;
     }
     const parent = path.dirname(dir);
@@ -816,11 +817,7 @@ async function vendorFliskExtension(
 
   let sourceRoot = "";
   for (const candidate of sources) {
-    if (
-      candidate &&
-      fs.existsSync(path.join(candidate, "Tiltfile")) &&
-      fs.existsSync(path.join(candidate, "engine"))
-    ) {
+    if (candidate && hasExtensionLayout(candidate)) {
       sourceRoot = candidate;
       break;
     }
@@ -841,7 +838,7 @@ async function vendorFliskExtension(
   for (const dir of FLISK_EXTENSION_DIRS) {
     // A project vendored by an older Flisk already holds test files; cpSync only adds, so drop them.
     removeVendoredTestFiles(path.join(vendoredDir, dir));
-    fs.cpSync(path.join(sourceRoot, dir), path.join(vendoredDir, dir), {
+    fs.cpSync(resolveExtensionDir(sourceRoot, dir), path.join(vendoredDir, dir), {
       recursive: true,
       filter: (source) => !isTestFile(source),
     });
