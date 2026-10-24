@@ -488,7 +488,7 @@ jobs:
               process.exit(1);
             }
             require("node:fs").statSync(path.join(dir, manifest.main));
-            console.log(`main: ${manifest.main}`);
+            console.log("main: " + manifest.main);
           '
 
       # Releases publish with --provenance from release-binaries.yml. Fail if the pinned
