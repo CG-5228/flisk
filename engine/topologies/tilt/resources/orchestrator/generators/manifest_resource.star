@@ -484,8 +484,8 @@ def _generate_yaml_manifest(resource_path, manifest, write_file):
     
     # Check if YAML already exists and is up-to-date by comparing with JSON
     json_path = resource_path + "/" + MANIFEST_FILENAME
-    json_mtime = local(["sh", "-c", 'stat -f %m "$1" 2>/dev/null || stat -c %Y "$1" 2>/dev/null || echo 0', "sh", json_path], quiet=True)
-    yaml_mtime = local(["sh", "-c", 'stat -f %m "$1" 2>/dev/null || stat -c %Y "$1" 2>/dev/null || echo 0', "sh", yaml_path], quiet=True)
+    json_mtime = local(["sh", "-c", "stat -f %m \"$1\" 2>/dev/null || stat -c %Y \"$1\" 2>/dev/null || echo 0", "sh", json_path], quiet=True)
+    yaml_mtime = local(["sh", "-c", "stat -f %m \"$1\" 2>/dev/null || stat -c %Y \"$1\" 2>/dev/null || echo 0", "sh", yaml_path], quiet=True)
     
     if str(json_mtime).strip() <= str(yaml_mtime).strip() and yaml_mtime != "0":
         # YAML is up-to-date, skip generation
