@@ -1,8 +1,26 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import { test } from "node:test";
-import { checkManifest, checkPackage, findTestFiles, findUnexpectedPaths, parsePackOutput } from "./check-npm-package.mjs";
+import {
+  REQUIRED_PATHS,
+  checkManifest,
+  checkPackage,
+  findMissingPaths,
+  findTestFiles,
+  findUnexpectedPaths,
+  readTarball,
+} from "./check-npm-package.mjs";
 
-const ESM = { name: "@flisk-sh/flisk", version: "0.0.0", type: "module" };
+const MANIFEST = {
+  name: "@flisk-sh/flisk",
+  version: "0.0.0",
+  type: "module",
+  engines: { node: ">=22.12.0" },
+  bin: { flisk: "cli/bin/flisk.js" },
+};
 
 test("flags test files in every shape the package used to ship", () => {
   const paths = [
@@ -33,18 +51,37 @@ test("flags paths outside the allowlist", () => {
   assert.deepEqual(findUnexpectedPaths(paths), paths.slice(0, 3));
 });
 
-test("requires an ESM package type", () => {
-  assert.deepEqual(checkManifest(ESM), []);
-  assert.match(checkManifest({ ...ESM, type: undefined }).join(), /expected "module"/);
-  assert.match(checkManifest({ ...ESM, type: "commonjs" }).join(), /expected "module"/);
+test("flags missing required paths", () => {
+  assert.deepEqual(findMissingPaths(REQUIRED_PATHS), []);
+  const withoutSpecs = REQUIRED_PATHS.filter((p) => p !== "runtime/specs/specs/TILT_TECH_STACK.star");
+  assert.deepEqual(findMissingPaths(withoutSpecs), ["runtime/specs/specs/TILT_TECH_STACK.star"]);
+});
+
+test("checks type, engines and bin in the manifest", () => {
+  assert.deepEqual(checkManifest(MANIFEST, REQUIRED_PATHS), []);
+  assert.match(checkManifest({ ...MANIFEST, type: undefined }, REQUIRED_PATHS).join(), /expected "module"/);
+  assert.match(checkManifest({ ...MANIFEST, type: "commonjs" }, REQUIRED_PATHS).join(), /expected "module"/);
+  assert.match(checkManifest({ ...MANIFEST, engines: undefined }, REQUIRED_PATHS).join(), /engines\.node/);
+  assert.match(checkManifest({ ...MANIFEST, bin: { flisk: "./cli/bin/missing.js" } }, REQUIRED_PATHS).join(), /not in the package/);
 });
 
 test("reports every problem at once", () => {
-  const problems = checkPackage(["cli/dist/a.test.js", "docs/x.md"], { ...ESM, type: undefined });
-  assert.equal(problems.filter((line) => !line.startsWith("  ")).length, 3);
+  const problems = checkPackage(["cli/dist/a.test.js", "docs/x.md"], { ...MANIFEST, type: undefined });
+  const headings = problems.filter((line) => !line.startsWith("  "));
+  assert.equal(headings.length, 5); // tests, allowlist, missing paths, type, bin target
 });
 
-test("reads the files list from npm pack --json output", () => {
-  assert.deepEqual(parsePackOutput(JSON.stringify([{ files: [{ path: "a.js" }] }])), ["a.js"]);
-  assert.throws(() => parsePackOutput("[{}]"), /no files list/);
+test("reads paths and package.json from a tarball", () => {
+  const root = mkdtempSync(join(tmpdir(), "check-npm-package-"));
+  for (const path of [...REQUIRED_PATHS, "cli/dist/x.test.js"]) {
+    const file = join(root, "package", path);
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, path === "package.json" ? JSON.stringify(MANIFEST) : "");
+  }
+  const tarball = join(root, "pkg.tgz");
+  execFileSync("tar", ["-czf", tarball, "-C", root, "package"]);
+  const { paths, manifest } = readTarball(tarball);
+  assert.equal(manifest.name, "@flisk-sh/flisk");
+  assert.deepEqual(findTestFiles(paths), ["cli/dist/x.test.js"]);
+  assert.deepEqual(findMissingPaths(paths), []);
 });

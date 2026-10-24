@@ -357,12 +357,6 @@ jobs:
           bun install --frozen-lockfile
           npm run build
 
-      # The root @flisk-sh/flisk package is what npm users install. Fail if it would ship
-      # test files (1.4.0 did), paths outside the allowlist, or lose "type": "module".
-      - name: Check the root npm package contents
-        run: |
-          npm pack --dry-run --ignore-scripts --json | node scripts/check-npm-package.mjs --manifest package.json
-
       # cli/dist is committed so `npm install -g github:flisk-sh/flisk`
       # works without a build step. Fail if a source change was committed
       # without rebuilding it.
@@ -374,6 +368,13 @@ jobs:
         run: | # zizmor: ignore[adhoc-packages] packs our own checkout
           mkdir -p "$RUNNER_TEMP/cli-tarball"
           npm pack --pack-destination "$RUNNER_TEMP/cli-tarball"
+
+      # This tarball is what npm users install. Fail if it ships test files (1.4.0 did) or paths
+      # outside the allowlist, misses a required runtime path, or loses "type": "module",
+      # "engines.node" or its bin target.
+      - name: Check the npm package contents
+        run: |
+          node scripts/check-npm-package.mjs --tarball "$(compgen -G "$RUNNER_TEMP/cli-tarball/*.tgz" | head -1)"
 
       - name: Upload the CLI tarball
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -430,6 +431,16 @@ jobs:
           test -f services/shop/orders-api/service.json
           echo "✅ Installed package scaffolds a project and a resource"
 
+      # examples/tdk-example ships in the package for this command; fail if it stops working.
+      - name: Copy the bundled example
+        working-directory: ${{ runner.temp }}
+        run: |
+          mkdir example-project && cd example-project
+          flisk project example --yes
+          test -f tdk-example/Tiltfile
+          test -f tdk-example/TILT_TECH_STACK.star
+          echo "✅ Installed package copies the bundled example"
+
   npm-package-smoke:
     name: 📦 Published npm Package Smoke Test
     runs-on: ubuntu-26.04
@@ -463,16 +474,12 @@ jobs:
           esac
 
       # The registry tarball is what npm users get (and what npmx.dev shows). Run the same
-      # package checks on it: no test files, allowlisted paths only, "type": "module".
+      # package checks on it as the package job runs on this branch's tarball.
       - name: Check the published tarball contents
         run: |
           pinned="$(node -p "require('./.github/npm-package-smoke/package.json').dependencies['@flisk-sh/flisk']")"
           npm pack "@flisk-sh/flisk@${pinned}" --pack-destination "${RUNNER_TEMP}" --silent
-          mkdir -p "${RUNNER_TEMP}/published"
-          tar -xzf "${RUNNER_TEMP}/flisk-sh-flisk-${pinned}.tgz" -C "${RUNNER_TEMP}/published"
-          tar -tzf "${RUNNER_TEMP}/flisk-sh-flisk-${pinned}.tgz" \
-            | node -e 'const fs = require("node:fs"); const files = fs.readFileSync(0, "utf8").split("\n").filter(Boolean).map((p) => ({ path: p.replace(/^package\//, "") })); console.log(JSON.stringify([{ files }]));' \
-            | node scripts/check-npm-package.mjs --manifest "${RUNNER_TEMP}/published/package/package.json"
+          node scripts/check-npm-package.mjs --tarball "${RUNNER_TEMP}/flisk-sh-flisk-${pinned}.tgz"
 
       # Releases publish with --provenance from release-binaries.yml. Fail if the pinned
       # version lacks an SLSA provenance attestation on the registry.

@@ -73,3 +73,17 @@ CI SHALL run `scripts/check-npm-package.mjs` on the root package pack in the `pa
 
 - **WHEN** `npm view @flisk-sh/flisk@<pin> dist.attestations.provenance.predicateType` is not `https://slsa.dev/provenance/v1`
 - **THEN** the job exits non-zero and names the version
+
+### Requirement: The package keeps what the installed CLI needs
+
+`scripts/check-npm-package.mjs` SHALL run on the real packed tarball (after `prepack`) and SHALL fail when a required path is missing, when a `bin` target is not in the tarball, or when `engines.node` is not declared. The `package-smoke` job SHALL install that tarball and run `flisk project example`.
+
+#### Scenario: A required path is missing
+
+- **WHEN** the tarball lacks any of `cli/bin/flisk.js`, `cli/dist-bundle/cli.js`, `cli/package.json`, `runtime/Tiltfile`, `runtime/specs/specs/TILT_TECH_STACK.star`, `examples/tdk-example/Tiltfile`, `package.json`, `README.md`, or `LICENSE`
+- **THEN** the check exits non-zero and names each missing path
+
+#### Scenario: The bundled example stops working
+
+- **WHEN** `flisk project example --yes` from the installed tarball does not write `tdk-example/Tiltfile` and `tdk-example/TILT_TECH_STACK.star`
+- **THEN** the `package-smoke` job fails
