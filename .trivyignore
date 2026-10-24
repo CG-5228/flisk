@@ -1,0 +1,7 @@
+# Accepted finding, reviewed in the PR that added it. Remove the line once npm ships a bundled undici >= 6.29.1.
+#
+# undici 6.29.0 is bundled inside npm 12.2.1 (the latest npm), pinned in .github/npm-cli/package-lock.json. The fix is in
+# undici 6.29.1, which no npm release carries yet, and a bundled dependency cannot be overridden from a lockfile. The npm
+# CLI only runs inside the release workflow to publish the package with OIDC, against registry.npmjs.org. It is not
+# shipped to users and does not run on user input. The advisory is a denial of service from an unhandled stream error.
+CVE-2026-109869 exp:2026-12-01
