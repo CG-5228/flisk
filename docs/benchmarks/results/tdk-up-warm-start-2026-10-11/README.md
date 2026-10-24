@@ -1,11 +1,11 @@
 # flisk up warm-start benchmark, 2026-10-11
 
-Results of `scripts/benchmark/tdk-up-warm-start.sh` on `tdk-restaurant-example`: one cold run and three warm runs, with the Docker VM sampled. The table is in [`summary.md`](summary.md); the chart is [`span.svg`](span.svg); the raw data is in [`summary.json`](summary.json) and the per-run folders.
+Results of `scripts/benchmark/flisk-up-warm-start.sh` on `tdk-restaurant-example`: one cold run and three warm runs, with the Docker VM sampled. The table is in [`summary.md`](summary.md); the chart is [`span.svg`](span.svg); the raw data is in [`summary.json`](summary.json) and the per-run folders.
 
 ## Reproduce
 
 ```bash
-scripts/benchmark/tdk-up-warm-start.sh \
+scripts/benchmark/flisk-up-warm-start.sh \
   --project <path to a Flisk project> \
   --out docs/benchmarks/results/tdk-up-warm-start-$(date +%F) \
   --cold-runs 1 --warm-runs 3 --sample-vm
