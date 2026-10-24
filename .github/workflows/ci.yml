@@ -473,14 +473,6 @@ jobs:
             *) echo "::error::flisk --version (${installed}) does not match pinned ${pinned}"; exit 1 ;;
           esac
 
-      # The registry tarball is what npm users get (and what npmx.dev shows). Run the same
-      # package checks on it as the package job runs on this branch's tarball.
-      - name: Check the published tarball contents
-        run: |
-          pinned="$(node -p "require('./.github/npm-package-smoke/package.json').dependencies['@flisk-sh/flisk']")"
-          npm pack "@flisk-sh/flisk@${pinned}" --pack-destination "${RUNNER_TEMP}" --silent
-          node scripts/check-npm-package.mjs --tarball "${RUNNER_TEMP}/flisk-sh-flisk-${pinned}.tgz"
-
       # Releases publish with --provenance from release-binaries.yml. Fail if the pinned
       # version lacks an SLSA provenance attestation on the registry.
       - name: Check the published version has provenance
@@ -492,6 +484,30 @@ jobs:
             exit 1
           fi
           echo "@flisk-sh/flisk@${pinned} provenance: ${predicate}"
+
+  # Audits the contents of the pinned version already on npm (what npmx.dev shows) with the
+  # same checks the package job runs on this branch's tarball. No pull request can change a
+  # published tarball, so this job is not in the summary gate: it stays red, visibly, until a
+  # fixed release is published and the pin in .github/npm-package-smoke moves to it.
+  npm-registry-audit:
+    name: 🔎 Published npm Package Audit
+    runs-on: ubuntu-26.04
+    needs: [changes]
+    if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22.12
+
+      - name: Check the published tarball contents
+        run: |
+          pinned="$(node -p "require('./.github/npm-package-smoke/package.json').dependencies['@flisk-sh/flisk']")"
+          npm pack "@flisk-sh/flisk@${pinned}" --pack-destination "${RUNNER_TEMP}" --silent
+          node scripts/check-npm-package.mjs --tarball "${RUNNER_TEMP}/flisk-sh-flisk-${pinned}.tgz"
 
   secret-scan:
     name: 🔑 Secret Scan

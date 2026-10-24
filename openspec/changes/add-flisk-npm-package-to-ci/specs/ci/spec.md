@@ -48,7 +48,7 @@ Adding `npm-package-smoke` SHALL NOT remove or weaken existing CI jobs, includin
 
 ### Requirement: Package contents are checked before and after publish
 
-CI SHALL run `scripts/check-npm-package.mjs` on the root package pack in the `package` job and on the pinned registry tarball in `npm-package-smoke`. The check SHALL fail when the package ships test files, ships a path outside the allowlist, or does not declare `"type": "module"`.
+CI SHALL run `scripts/check-npm-package.mjs` on the root package pack in the `package` job and on the pinned registry tarball in `npm-registry-audit`, a job outside the summary gate because no pull request can change a published tarball. The check SHALL fail when the package ships test files, ships a path outside the allowlist, or does not declare `"type": "module"`.
 
 #### Scenario: A test file would ship
 
