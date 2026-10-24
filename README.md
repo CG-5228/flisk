@@ -1,34 +1,38 @@
 <div align="center">
 
-# Flisk CLI — generate and run your whole tech stack without the setup pain
+# Flisk: your whole stack, running locally with one command
 
-Go from an empty folder to a running tech stack with one command. Built for agents.
+Describe each service in a `service.json`. Flisk writes the Dockerfiles, routing, and Tiltfile, then starts everything with hot reload.<br />Built for developers and the AI agents that code with them.
 
 <img src="https://raw.githubusercontent.com/flisk-sh/.github/main/profile/header-flisk.svg" alt="Flisk: your whole stack, running locally with one command." width="100%">
 
-
 [![Flisk Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?logo=discord&logoColor=white)](https://discord.gg/JG6r33HVB)
-[![npm version](https://img.shields.io/npm/v/@flisk-sh/flisk.svg?style=flat&color=blue)](https://www.npmjs.com/package/@flisk-sh/flisk) [![npm weekly downloads](https://img.shields.io/npm/dw/@flisk-sh/flisk?style=flat&color=blue)](https://www.npmjs.com/package/@flisk-sh/flisk) [![unpacked size](https://img.shields.io/npm/unpacked-size/@flisk-sh/flisk)](https://packagephobia.com/result?p=@flisk-sh/flisk) [![install size](https://badgen.net/packagephobia/install/@flisk-sh/flisk)](https://packagephobia.com/result?p=@flisk-sh/flisk) [![GitHub stars](https://img.shields.io/github/stars/flisk-sh/flisk?style=flat&logo=github)](https://github.com/flisk-sh/flisk/stargazers) [![OSS Insight](https://img.shields.io/badge/OSS%20Insight-analytics-blue)](https://ossinsight.io/analyze/flisk-sh/flisk) [![X followers: 1,605](https://img.shields.io/badge/X%20followers-1%2C605-1DA1F2?style=flat&logo=x&logoColor=white)](https://x.com/brookservers)
-[![Journeys E2E](https://github.com/flisk-sh/flisk/actions/workflows/e2e-journeys.yml/badge.svg)](https://github.com/flisk-sh/flisk/actions/workflows/e2e-journeys.yml) [![ERP fixture scale E2E](https://github.com/flisk-sh/flisk/actions/workflows/e2e-scale-full.yml/badge.svg)](https://github.com/flisk-sh/flisk/actions/workflows/e2e-scale-full.yml) [![Example apps E2E](https://github.com/flisk-sh/flisk/actions/workflows/e2e-real-apps.yml/badge.svg?branch=main)](https://github.com/flisk-sh/flisk/actions/workflows/e2e-real-apps.yml) [![CodeQL](https://github.com/flisk-sh/flisk/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/flisk-sh/flisk/security/code-scanning) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/flisk-sh/flisk/badge)](https://scorecard.dev/viewer/?uri=github.com/flisk-sh/flisk) [![Known Vulnerabilities](https://snyk.io/test/github/flisk-sh/flisk/badge.svg)](https://snyk.io/test/github/flisk-sh/flisk) [![Socket Badge](https://badge.socket.dev/npm/package/@flisk-sh/flisk/latest)](https://socket.dev/npm/package/@flisk-sh/flisk/overview)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/@flisk-sh/flisk.svg?style=flat&color=blue)](https://www.npmjs.com/package/@flisk-sh/flisk) [![npm weekly downloads](https://img.shields.io/npm/dw/@flisk-sh/flisk?style=flat&color=blue)](https://www.npmjs.com/package/@flisk-sh/flisk) [![GitHub stars](https://img.shields.io/github/stars/flisk-sh/flisk?style=flat&logo=github)](https://github.com/flisk-sh/flisk/stargazers) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[![ERP backends healthy](https://img.shields.io/badge/ERP%20backends%20healthy-100%2F100-brightgreen)](https://github.com/flisk-sh/flisk/actions/runs/39160719471) [![ERP time to all healthy](https://img.shields.io/badge/ERP%20time%20to%20all%20healthy-524s-blue)](https://github.com/flisk-sh/flisk/actions/runs/39160719471) [![ERP frontends answering](https://img.shields.io/badge/ERP%20frontends%20answering-7%2F7-brightgreen)](https://github.com/flisk-sh/flisk/actions/runs/39160719471) [![ERP running containers](https://img.shields.io/badge/ERP%20running%20containers-109-blue)](https://github.com/flisk-sh/flisk/actions/runs/39160719471) [![ERP memory used](https://img.shields.io/badge/ERP%20memory%20used-1736%20MiB-blue)](https://github.com/flisk-sh/flisk/actions/runs/39160719471)
-[![Test coverage](https://raw.githubusercontent.com/flisk-sh/flisk/main/docs/assets/coverage.svg)](https://github.com/flisk-sh/flisk/blob/main/docs/assets/coverage.svg)
-
-<sub>ERP fixture scale run on a clean GitHub-hosted runner (4 vCPU, 15 GB RAM), snapshot from [run 39160719471](https://github.com/flisk-sh/flisk/actions/runs/39160719471). The live status is in the ERP fixture scale E2E badge above.</sub>
-
-<a href="https://trendshift.io/repositories/266432?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-266432" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/266432/daily?language=Starlark" alt="flisk-sh%2Fflisk | Trendshift" width="250" height="55"/></a>
 <a href="https://trendshift.io/repositories/266432?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-266432" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/266432/weekly?language=Starlark" alt="flisk-sh%2Fflisk | Trendshift" width="250" height="55"/></a>
-<p align="center">
-  <a href="https://www.bestpractices.dev/projects/15310">
-    <img src="https://www.bestpractices.dev/assets/openssf_bestpracticesbadge-a908f4124737f3d6b2c5abc82756bd2a435cff474b45615ce469746c31a4288c.svg" alt="OpenSSF Best Practices" height="80" align="middle" style="vertical-align: middle" />
-  </a>
-  <a href="https://www.bestpractices.dev/projects/15310">
-    <img src="https://img.shields.io/badge/OpenSSF%20Silver-95%25-yellow" alt="OpenSSF Silver: 95%" height="40" align="middle" style="vertical-align: middle" />
-  </a>
-</p>
 
-<br />
+<img src="docs/assets/demo.svg" alt="Flisk scaffolding a backend and a frontend, then listing the stack" width="900" />
+
+<sub>Scaffolding a backend and a frontend, then listing the stack.</sub>
+
+</div>
+
+## Try it
+
+```bash
+npm install -g @flisk-sh/flisk
+npm init create-microservices my-project -- --yes
+cd my-project
+flisk up main
+```
+
+You get an `api` backend and a `web` frontend behind one local gateway, with Postgres and hot reload. You need Docker, [Tilt](https://docs.tilt.dev/install.html), Node.js 22.12+, and [Bun](https://bun.sh/) 1.2+; `flisk doctor` checks your machine. See the [quick start](#quick-start) for every option.
+
+<div align="center">
+
+<p><strong><a href="#quick-start">Quick start</a> · <a href="#why-flisk-cli">Why Flisk</a> · <a href="#examples">Examples</a> · <a href="#installation">Installation</a> · <a href="#faq">FAQ</a> · <a href="#docs">Documentation</a></strong></p>
+
+[Website](https://flisk.sh/) · [Quickstart](https://flisk.sh/docs/quickstart/) · [Examples](https://flisk.sh/docs/examples/) · [Awesome Flisk](https://github.com/flisk-sh/awesome-tdk-framework) · [Demo](https://flisk-sh.github.io/flisk-demo-animation/) · [Report a bug](https://github.com/flisk-sh/flisk/issues)
 
 <a id="readme-languages"></a>
 
@@ -38,9 +42,30 @@ English | [简体中文](docs/README-zh_cn.md) | [繁體中文](docs/README-zh_t
 
 </p>
 
-<br />
+<details>
+<summary>Test, scale, and security status</summary>
 
-[Website](https://flisk.sh/) · [Quickstart](https://flisk.sh/docs/quickstart/) · [Examples](https://flisk.sh/docs/examples/) · [Awesome Flisk](https://github.com/flisk-sh/awesome-tdk-framework) · [Demo](https://flisk-sh.github.io/flisk-demo-animation/) · [Report a bug](https://github.com/flisk-sh/flisk/issues)
+[![Journeys E2E](https://github.com/flisk-sh/flisk/actions/workflows/e2e-journeys.yml/badge.svg)](https://github.com/flisk-sh/flisk/actions/workflows/e2e-journeys.yml) [![ERP fixture scale E2E](https://github.com/flisk-sh/flisk/actions/workflows/e2e-scale-full.yml/badge.svg)](https://github.com/flisk-sh/flisk/actions/workflows/e2e-scale-full.yml) [![Example apps E2E](https://github.com/flisk-sh/flisk/actions/workflows/e2e-real-apps.yml/badge.svg?branch=main)](https://github.com/flisk-sh/flisk/actions/workflows/e2e-real-apps.yml) [![CodeQL](https://github.com/flisk-sh/flisk/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/flisk-sh/flisk/security/code-scanning) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/flisk-sh/flisk/badge)](https://scorecard.dev/viewer/?uri=github.com/flisk-sh/flisk) [![Known Vulnerabilities](https://snyk.io/test/github/flisk-sh/flisk/badge.svg)](https://snyk.io/test/github/flisk-sh/flisk) [![Socket Badge](https://badge.socket.dev/npm/package/@flisk-sh/flisk/latest)](https://socket.dev/npm/package/@flisk-sh/flisk/overview)
+
+[![ERP backends healthy](https://img.shields.io/badge/ERP%20backends%20healthy-100%2F100-brightgreen)](https://github.com/flisk-sh/flisk/actions/runs/39160719471) [![ERP time to all healthy](https://img.shields.io/badge/ERP%20time%20to%20all%20healthy-524s-blue)](https://github.com/flisk-sh/flisk/actions/runs/39160719471) [![ERP frontends answering](https://img.shields.io/badge/ERP%20frontends%20answering-7%2F7-brightgreen)](https://github.com/flisk-sh/flisk/actions/runs/39160719471) [![ERP running containers](https://img.shields.io/badge/ERP%20running%20containers-109-blue)](https://github.com/flisk-sh/flisk/actions/runs/39160719471) [![ERP memory used](https://img.shields.io/badge/ERP%20memory%20used-1736%20MiB-blue)](https://github.com/flisk-sh/flisk/actions/runs/39160719471)
+[![Test coverage](https://raw.githubusercontent.com/flisk-sh/flisk/main/docs/assets/coverage.svg)](https://github.com/flisk-sh/flisk/blob/main/docs/assets/coverage.svg)
+
+<sub>ERP fixture scale run on a clean GitHub-hosted runner (4 vCPU, 15 GB RAM), snapshot from [run 39160719471](https://github.com/flisk-sh/flisk/actions/runs/39160719471). The live status is in the ERP fixture scale E2E badge above.</sub>
+
+[![unpacked size](https://img.shields.io/npm/unpacked-size/@flisk-sh/flisk)](https://packagephobia.com/result?p=@flisk-sh/flisk) [![install size](https://badgen.net/packagephobia/install/@flisk-sh/flisk)](https://packagephobia.com/result?p=@flisk-sh/flisk) [![OSS Insight](https://img.shields.io/badge/OSS%20Insight-analytics-blue)](https://ossinsight.io/analyze/flisk-sh/flisk) [![X followers: 1,605](https://img.shields.io/badge/X%20followers-1%2C605-1DA1F2?style=flat&logo=x&logoColor=white)](https://x.com/brookservers)
+
+<a href="https://trendshift.io/repositories/266432?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-266432" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/266432/daily?language=Starlark" alt="flisk-sh%2Fflisk | Trendshift" width="250" height="55"/></a>
+
+<p align="center">
+  <a href="https://www.bestpractices.dev/projects/15310">
+    <img src="https://www.bestpractices.dev/assets/openssf_bestpracticesbadge-a908f4124737f3d6b2c5abc82756bd2a435cff474b45615ce469746c31a4288c.svg" alt="OpenSSF Best Practices" height="80" align="middle" style="vertical-align: middle" />
+  </a>
+  <a href="https://www.bestpractices.dev/projects/15310">
+    <img src="https://img.shields.io/badge/OpenSSF%20Silver-95%25-yellow" alt="OpenSSF Silver: 95%" height="40" align="middle" style="vertical-align: middle" />
+  </a>
+</p>
+
+</details>
 
 </div>
 
@@ -114,8 +139,9 @@ Fastest way (recommended): open the [Flisk starter](https://github.com/flisk-sh/
 
 </details>
 
-### ⚡ Zero-Config Local Stacks in About 14 Seconds
-No vendor lock-in. No tedious plumbing. Run a single command to natively orchestrate **72 different integration tiers** including:
+### ⚡ A running stack in about 14 seconds
+
+On a one-backend quickstart with warm image layers, `flisk up` reaches a healthy API in 12.8 to 13.8 seconds ([timing notes](docs/benchmarks/quickstart-timing.md)). An 8-service stack settles in 32 to 42 seconds warm and about 4.5 minutes on its first cold build ([benchmark](docs/benchmarks/results/tdk-up-warm-start-2026-10-11/summary.md)). No vendor lock-in and no hand-written plumbing. Flisk works with:
 * **Runtimes & Frameworks:** Bun, Node, Python, Go, Rust, React, Vue, Svelte, Elysia, Fastify, NestJS
 * **Databases & Tooling:** Prisma, Drizzle, Atlas, Dbmate
 * **Messaging & Gateway:** NATS, Traefik
@@ -134,11 +160,11 @@ flisk up shop
 Agents get durable checkpoint volumes that survive `flisk down`, sticky session routing via `x-session-id`, graceful SIGTERM drain during hot reloads, a Docker health check on `/health`, and application-level readiness checks on `/ready`. See the [AI agents guide](docs/agents/ai-agents.md) and [honest comparison with agent frameworks](docs/compare-honest.md#ai-agent-frameworks-and-workflow-engines-libfx-langgraph-mastra-vercel-workflows-temporal).
 
 
-Flisk CLI — start services on your machine. It is not a deploy and not a Compose file: define each service in `service.json`, then run `flisk up`. No Kubernetes is needed on the machine.
+**What Flisk is:** a local development runtime. Define each service in `service.json` and run `flisk up`. Docker runs the containers, Tilt live-updates them while you code, and Flisk writes the configuration both use. No local Kubernetes is needed.
 
-Stability: 1.x local dev. Write `service.json`; Flisk generates the local runtime files. See [what Flisk writes](docs/generated-files.md) and how to check for drift. Core CLI is MIT and needs no key. Premium is optional.
+**What Flisk is not:** a deploy tool or a Compose file. Production deployment stays with Helm, Argo CD, or Kustomize.
 
-Docker runs the containers. Tilt watches services and live-updates containers while you code. Flisk CLI writes the configuration Tilt uses. Production deployment stays with Helm, Argo CD, or Kustomize.
+Stability: 1.x. The core CLI is MIT and needs no key; Premium is optional. See [what Flisk writes](docs/generated-files.md) and how to check for drift.
 
 
 > [!IMPORTANT]
@@ -146,12 +172,6 @@ Docker runs the containers. Tilt watches services and live-updates containers wh
 > [`@flisk-sh/flisk`](https://www.npmjs.com/package/@flisk-sh/flisk) npm package, or the
 > [official website](https://flisk.sh/). Follow the installation links from these official sources.
 > A similar repository name or copied README does not establish that a download is official.
-
-<p align="center"><strong><a href="#quick-start">Quick start</a> · <a href="#why-flisk-cli">Why Flisk</a> · <a href="#examples">Examples</a> · <a href="#installation">Installation</a> · <a href="#faq">FAQ</a> · <a href="#docs">Documentation</a></strong></p>
-
-If Flisk helps you run your local stack, a ⭐ on [this repo](https://github.com/flisk-sh/flisk) helps other developers find it.
-
-`flisk ui` opens an interactive terminal dashboard for inspecting running services. Move with `↑/↓` or `j/k`, search with `/`, and press `1`–`5` to jump between tabs. See [docs/ui.md](docs/ui.md) for every key binding.
 
 ## Why Flisk CLI?
 
@@ -268,12 +288,6 @@ curl http://api.shop.localhost/api/orders/health
 
 `flisk up` prints the host ports it chose. It uses port 80 when it is free, so URLs carry no port. Otherwise it picks one from 8080-8180, and the URLs it prints include that port (on Linux and WSL2 a non-root user cannot check port 80, so the range is used there). Use the URL `flisk up` prints, or set `FLISK_HTTP_PORT`. A resource named `orders-api` is served at `/api/orders` (a trailing `-api` is dropped); `flisk up` prints the exact URLs.
 
-<p align="center">
-<img src="docs/assets/demo.svg" alt="Flisk scaffolding a backend and a frontend, then listing the stack" width="900" />
-<br /><br />
-<em>Scaffolding a backend and frontend, then listing the stack.</em>
-</p>
-
 ### What Flisk writes for a frontend
 
 You maintain `service.json`; Flisk generates the local runtime files. A frontend such as `services/store/storefront-web` has files like these after generation:
@@ -292,10 +306,6 @@ services/store/storefront-web/
 
 You do not need to write the nginx config, Dockerfile, or a `docker-compose.yml` for this local stack. `flisk up` uses Docker and Tilt to start it. The [generated-files guide](docs/generated-files.md) lists the other outputs and explains how regeneration and drift checks work.
 
-<p align="center">
-<img src="docs/assets/flisk-cli-top-9-uses.jpg" alt="Top 9 places to use Flisk CLI" width="900" />
-</p>
-
 If Helm, Compose, or your existing Tilt setup already gives you a working local environment, keep using it. Flisk CLI is for engineers managing several services who want a clear local service contract and one command to start the stack.
 
 See [how Flisk compares to alternative dev tools](docs/comparison.md), [how Flisk CLI works alongside Helm](https://flisk.sh/docs/with-helm/), the [service schema](runtime/engine/schemas/service-schema.json), and the [project configuration schema](runtime/engine/schemas/project-schema.json).
@@ -305,7 +315,8 @@ See [how Flisk compares to alternative dev tools](docs/comparison.md), [how Flis
 Use `flisk ui` to inspect stacks and resources. Arrow keys or `j`/`k` move the
 selection; `g`/`G` or Home/End jump to the first/last item, and PageUp/PageDown
 move one visible page. `/` searches; navigation letters remain search text
-while searching. The selected row stays visible when the terminal is resized.
+while searching. Press `1`–`5` to jump between tabs. The selected row stays
+visible when the terminal is resized. See [docs/ui.md](docs/ui.md) for every key binding.
 
 ## Update Flisk
 
