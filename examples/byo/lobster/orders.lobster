@@ -5,9 +5,9 @@ for([3, 5, 8, 13]) x:
     total += x
 
 body := "\{\"service\":\"lobster\",\"orders\":4,\"total\":" + total + "\}\n"
-if not write_file("www/orders.json", body):
-    print("could not write www/orders.json")
+if not write_file("/site/www/orders.json", body, 0, 1):
+    print("could not write /site/www/orders.json")
     return 1
-if not write_file("www/health", "ok\n"):
-    print("could not write www/health")
+if not write_file("/site/www/health", "ok\n", 0, 1):
+    print("could not write /site/www/health")
     return 1

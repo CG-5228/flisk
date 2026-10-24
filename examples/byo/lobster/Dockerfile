@@ -13,9 +13,10 @@ RUN curl -fsSL -o /tmp/lobster.zip "https://github.com/aardappel/lobster/release
  && rm /tmp/lobster.zip
 WORKDIR /site
 COPY orders.lobster ./
-# The build output is quiet in CI, so a failure prints the linker view and Lobster's own output before exiting.
-RUN mkdir www && { /opt/lobster/bin/lobster orders.lobster && test -s www/health; } \
- || { echo "lobster failed (exit $?)" >&2; ldd /opt/lobster/bin/lobster >&2; /opt/lobster/bin/lobster orders.lobster >&2; exit 1; }
+# The build output is quiet in CI, so a failure prints the linker view, Lobster's own output and the file listing before exiting.
+# The script writes absolute paths (/site/www/...): the docs do not say what a relative write_file path resolves against.
+RUN mkdir -p /site/www && { /opt/lobster/bin/lobster orders.lobster && test -s /site/www/health; } \
+ || { echo "lobster failed (exit $?)" >&2; ldd /opt/lobster/bin/lobster >&2; /opt/lobster/bin/lobster orders.lobster 2>&1 >&2; ls -la /site /site/www >&2; exit 1; }
 
 FROM alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
 COPY --from=generate /site/www /www
