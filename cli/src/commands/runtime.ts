@@ -43,7 +43,9 @@ export const runtimeCommand = new Command("runtime")
       ? REQUIRED_ASSET_PATHS.filter(({ path, directory }) => {
           try {
             const stats = statSync(
-              EXTENSION_NAMES.has(path) ? resolveExtensionDir(assetRoot, path) : join(assetRoot, path),
+              EXTENSION_NAMES.has(path)
+                ? resolveExtensionDir(assetRoot, path)
+                : join(assetRoot, path),
             );
             return directory ? !stats.isDirectory() : !stats.isFile();
           } catch {

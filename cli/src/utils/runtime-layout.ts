@@ -17,5 +17,8 @@ export function resolveExtensionDir(sourceRoot: string, name: string): string {
 }
 
 export function hasExtensionLayout(sourceRoot: string): boolean {
-  return existsSync(join(sourceRoot, "Tiltfile")) && existsSync(resolveExtensionDir(sourceRoot, "engine"));
+  return (
+    existsSync(join(sourceRoot, "Tiltfile")) &&
+    existsSync(resolveExtensionDir(sourceRoot, "engine"))
+  );
 }

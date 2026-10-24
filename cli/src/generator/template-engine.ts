@@ -22,11 +22,15 @@ import { writeTextFile } from "../utils/file-helpers.js";
 import { assertFliskGeneratedPath } from "../utils/generated-paths.js";
 import { DEFAULT_ALWAYS_ENABLED_INFRA } from "../utils/project-config-defaults.js";
 import {
+  EXTENSION_DIRS,
+  hasExtensionLayout,
+  resolveExtensionDir,
+} from "../utils/runtime-layout.js";
+import {
   generatedFieldErrorsForFile,
   validateServiceManifestFile,
 } from "../utils/service-manifest.js";
 import { discoverResourcesFromRoot, discoverServiceManifestPaths } from "../utils/services.js";
-import { EXTENSION_DIRS, hasExtensionLayout, resolveExtensionDir } from "../utils/runtime-layout.js";
 import { isStackFeatureEnabledInStacks } from "../utils/stack-features.js";
 import { hasSablierLicense, hasVerdaccioLicense } from "./extension-fetch.js";
 
