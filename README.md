@@ -13,7 +13,7 @@ Ask your AI agent for an app, or type four commands yourself.<br />Flisk sets up
 
 <img src="docs/assets/demo-ai.svg" alt="An AI coding agent builds a small online shop with Flisk and runs it locally" width="900" />
 
-<sub>An example agent session. The Flisk commands and URLs are real. Copy the prompt from <a href="#with-your-ai-agent">Try it</a>.</sub>
+<sub>An illustrative agent session. The Flisk commands, and the service list and URLs Flisk prints, come from a real run. Copy the prompt from <a href="#with-your-ai-agent">Try it</a>.</sub>
 
 </div>
 

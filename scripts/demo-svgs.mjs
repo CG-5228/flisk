@@ -3,12 +3,20 @@
 // Draws the two animated README demos as self-contained SVG (CSS animation, no fonts or scripts to load):
 //   docs/assets/demo-ai.svg   a person asks an AI coding agent for an app; the agent runs flisk and reports the URLs
 //   docs/assets/demo-cli.svg  the same four flisk commands typed in a terminal
-// Command output is copied from real runs of flisk 1.3.207 (project, resource, and `up --dry-run` on a fresh
-// folder). The agent's chat lines are an example session. Re-check the output lines when the CLI wording changes.
+// Command output is copied from real runs of flisk 1.3.207 on a fresh folder: `project` and `resource` ran for real,
+// and the `up` lines (service list and URLs) come from `flisk up shop --dry-run`, which prints them before Tilt
+// starts. Starting the containers was not captured, so the demos show what Flisk prints, not a verified live app.
+// The agent's chat lines are an example session. Re-check the output lines when the CLI wording changes.
 // Run: node scripts/demo-svgs.mjs
 import { writeFileSync } from "node:fs";
 
 const outFile = (name) => new URL(`../docs/assets/${name}`, import.meta.url);
+
+// The URLs `flisk up shop` prints for this project. Both demos read them from here so they cannot disagree.
+const URLS = {
+  storefront: "http://app.my-shop.localhost/shop-web/health",
+  api: "http://api.my-shop.localhost/api/orders/health",
+};
 
 // Brand palette from docs/branding.md, tuned for text on the dark window.
 const C = {
@@ -148,16 +156,16 @@ function aiDemo() {
   });
 
   // The result: where to open the app.
-  s.show(sansText(left, 392, "Your shop is running on your computer:", { size: 15.5 }), 10.0);
+  s.show(sansText(left, 392, "Flisk prints where your shop will be on your computer:", { size: 15.5 }), 10.0);
   s.show(`<rect x="${left - 12}" y="406" width="${900 - 2 * (left - 12)}" height="78" rx="10" fill="${C.slate}"/>`, 10.4);
   s.show(
     sansText(left, 437, "Storefront", { size: 14, color: C.mist }) +
-      monoText(170, 437, "http://app.my-shop.localhost/shop-web", { size: 14.5, color: C.signal }),
+      monoText(170, 437, URLS.storefront, { size: 14.5, color: C.signal }),
     10.6,
   );
   s.show(
     sansText(left, 467, "Orders API", { size: 14, color: C.mist }) +
-      monoText(170, 467, "http://api.my-shop.localhost/api/orders", { size: 14.5, color: C.signal }),
+      monoText(170, 467, URLS.api, { size: 14.5, color: C.signal }),
     10.9,
   );
   s.show(
@@ -211,9 +219,9 @@ function cliDemo() {
   command("flisk up shop", 10.7, 11.4);
   out('Starting 2 services from stack "shop"...', 11.8);
   out("🌍 Frontend URLs:", 12.1);
-  out("  - shop-web: http://app.my-shop.localhost/shop-web/health", 12.3, C.signal);
+  out(`  - shop-web: ${URLS.storefront}`, 12.3, C.signal);
   out("🔧 Backend API URLs:", 12.5);
-  out("  - orders-api: http://api.my-shop.localhost/api/orders/health", 12.7, C.signal);
+  out(`  - orders-api: ${URLS.api}`, 12.7, C.signal);
   gap();
   comment("# You wrote no Dockerfile, Compose file, routing, or secrets. Flisk did.", 13.6);
 
