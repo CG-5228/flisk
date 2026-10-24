@@ -329,7 +329,10 @@ describe("template-engine", () => {
         .flatMap((entry) =>
           entry.isDirectory() ? walk(path.join(dir, entry.name)) : [path.join(dir, entry.name)],
         );
-    const withExtensionSource = async (source: string, run: (projectRoot: string) => Promise<void>) => {
+    const withExtensionSource = async (
+      source: string,
+      run: (projectRoot: string) => Promise<void>,
+    ) => {
       const projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), "flisk-vendor-out-"));
       const oldExtensionSource = process.env.FLISK_EXTENSION_SOURCE;
       process.env.FLISK_EXTENSION_SOURCE = source;
