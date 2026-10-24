@@ -3,10 +3,13 @@
 # =============================================================================
 # This is the unified Tiltfile entry point for flisk-cli.
 # It combines: engine, discovery, specs, and ext into one repository.
+# In a source checkout this file lives at runtime/Tiltfile; packaged and vendored
+# copies place it at the bundle root.
 #
 # Usage:
 #   v1alpha1.extension_repo(name='flisk-cli', url='https://github.com/flisk-sh/flisk')
 #   load('ext://flisk-cli', 'Utils', 'Manifest', ...)
+#   Note: the repository root no longer holds a Tiltfile; in this checkout the entry point is runtime/Tiltfile.
 # =============================================================================
 
 # =============================================================================

@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { hasExtensionLayout, resolveExtensionDir } from "../runtime-layout.js";
+import { hasExtensionLayout, resolveExtensionDir, resolveTiltfile } from "../runtime-layout.js";
 
 describe("runtime-layout", () => {
   let root: string;
@@ -34,5 +34,28 @@ describe("runtime-layout", () => {
     expect(hasExtensionLayout(root)).toBe(false);
     mkdirSync(join(root, "engine"));
     expect(hasExtensionLayout(root)).toBe(false);
+  });
+
+  it("resolves the nested runtime Tiltfile when present", () => {
+    mkdirSync(join(root, "runtime"));
+    writeFileSync(join(root, "runtime", "Tiltfile"), "");
+    writeFileSync(join(root, "Tiltfile"), "");
+    expect(resolveTiltfile(root)).toBe(join(root, "runtime", "Tiltfile"));
+  });
+
+  it("falls back to the flat Tiltfile for packaged and vendored layouts", () => {
+    writeFileSync(join(root, "Tiltfile"), "");
+    expect(resolveTiltfile(root)).toBe(join(root, "Tiltfile"));
+  });
+
+  it("returns the flat path when no Tiltfile exists, so callers report it missing", () => {
+    expect(resolveTiltfile(root)).toBe(join(root, "Tiltfile"));
+  });
+
+  it("detects the extension layout from a runtime Tiltfile with flat engine", () => {
+    mkdirSync(join(root, "runtime"));
+    writeFileSync(join(root, "runtime", "Tiltfile"), "");
+    mkdirSync(join(root, "engine"));
+    expect(hasExtensionLayout(root)).toBe(true);
   });
 });
