@@ -13,7 +13,7 @@ Ask your AI agent for an app, or type four commands yourself.<br />Flisk sets up
 
 <img src="docs/assets/demo-ai.svg" alt="An AI coding agent builds a small online shop with Flisk and runs it locally" width="900" />
 
-<sub>An example agent session. The Flisk commands and URLs are real.</sub>
+<sub>An example agent session. The Flisk commands and URLs are real. Copy the prompt from <a href="#with-your-ai-agent">Try it</a>.</sub>
 
 </div>
 
@@ -21,15 +21,71 @@ Ask your AI agent for an app, or type four commands yourself.<br />Flisk sets up
 
 ### With your AI agent
 
-Install Flisk, then tell your coding agent what you want. Claude Code, Codex, Cursor, GitHub Copilot, and any other agent that can run commands will work.
+Install Flisk, then paste a prompt into your coding agent. Claude Code, Codex, Cursor, GitHub Copilot, and any other agent that can run commands will work. Every block below has a copy button.
 
 ```bash
 npm install -g @flisk-sh/flisk
 ```
 
-> Build me a small online shop with a storefront and an orders API, and run it on my laptop with Flisk.
+**The prompt from the demo:**
 
-Your agent creates the project, adds each part, and starts it. If something is missing on your computer, `flisk doctor` tells the agent what to fix. Agents can also use Flisk as an MCP server: add `{ "command": "flisk", "args": ["mcp"] }` to your agent's MCP settings. See [use Flisk with your AI agent](#use-flisk-with-your-ai-agent).
+```text
+Build me a small online shop with a storefront and an orders API, and run it on my laptop with Flisk.
+```
+
+Your agent creates the project, adds each part, and starts it. If something is missing on your computer, `flisk doctor` tells it what to fix.
+
+<details>
+<summary>More prompts to copy</summary>
+
+**Add a service to a project you already have**
+
+```text
+Use Flisk to add a backend service called payments-api to my shop stack, then start the stack and give me the URLs.
+```
+
+**Build an AI agent with tools and a database**
+
+```text
+Use Flisk to scaffold an AI agent, an MCP tools server, and a database in one stack called shop, then start it and tell me how to talk to the agent.
+```
+
+**Something is not working**
+
+```text
+Run flisk doctor, explain every problem in plain words, and fix what you can. Then start my stack with flisk up.
+```
+
+**See what is running**
+
+```text
+Use flisk status to tell me which services are running, which are unhealthy, and what URL each one has.
+```
+
+**Stop everything**
+
+```text
+Stop my Flisk stack with flisk down and confirm nothing is left running.
+```
+
+</details>
+
+<details>
+<summary>Connect your agent to Flisk as an MCP server</summary>
+
+Add this to your agent's MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "flisk": { "command": "flisk", "args": ["mcp"] }
+  }
+}
+```
+
+The agent can then start the stack, check status, restart a service, and read agent sessions through Flisk tools instead of shell commands. See [use Flisk with your AI agent](#use-flisk-with-your-ai-agent).
+
+</details>
 
 ### In your terminal
 
