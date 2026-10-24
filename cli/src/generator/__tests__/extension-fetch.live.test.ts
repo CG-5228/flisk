@@ -53,15 +53,21 @@ describe.skipIf(!live)("premium endpoint (live)", () => {
     expect(output).toMatch(/entitlement probes denied: playwright=40[13]/);
   });
 
-  it.skipIf(!grantedKey)("downloads and applies the premium bundle for a granted key", async () => {
-    process.env.FLISK_LICENSE_KEY = grantedKey;
+  it.skipIf(!grantedKey)(
+    "downloads and applies the premium bundle for a granted key",
+    async () => {
+      process.env.FLISK_LICENSE_KEY = grantedKey;
 
-    const { applyPremiumOverlay } = await import("../extension-fetch.js");
-    const applied = await applyPremiumOverlay(projectRoot, destDir);
+      const { applyPremiumOverlay } = await import("../extension-fetch.js");
+      const applied = await applyPremiumOverlay(projectRoot, destDir);
 
-    expect(applied).toBe(true);
-    expect(
-      existsSync(join(destDir, "engine/topologies/tilt/generators/typescript/playwright_config.star")),
-    ).toBe(true);
-  }, 120_000);
+      expect(applied).toBe(true);
+      expect(
+        existsSync(
+          join(destDir, "engine/topologies/tilt/generators/typescript/playwright_config.star"),
+        ),
+      ).toBe(true);
+    },
+    120_000,
+  );
 });
