@@ -6,7 +6,7 @@ Ask your AI agent for an app, or type four commands yourself.<br />Flisk sets up
 
 <img src="https://raw.githubusercontent.com/flisk-sh/.github/main/profile/header-flisk.svg" alt="Flisk: your whole stack, running locally with one command." width="100%">
 
-[![Flisk Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?logo=discord&logoColor=white)](https://discord.gg/JG6r33HVB)
+[![Flisk Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?logo=discord&logoColor=white)](https://discord.gg/Sjhb3tnq3)
 [![npm version](https://img.shields.io/npm/v/@flisk-sh/flisk.svg?style=flat&color=blue)](https://www.npmjs.com/package/@flisk-sh/flisk) [![npm weekly downloads](https://img.shields.io/npm/dw/@flisk-sh/flisk?style=flat&color=blue)](https://www.npmjs.com/package/@flisk-sh/flisk) [![GitHub stars](https://img.shields.io/github/stars/flisk-sh/flisk?style=flat&logo=github)](https://github.com/flisk-sh/flisk/stargazers) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 <a href="https://trendshift.io/repositories/266432?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-266432" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/266432/weekly?language=Starlark" alt="flisk-sh%2Fflisk | Trendshift" width="250" height="55"/></a>
@@ -671,7 +671,7 @@ Then run `flisk doctor` and retry the same task. If the problem persists, [open 
 
 ## Contributing and license
 
-Contributions are welcome. Start with [CONTRIBUTING.md](.github/CONTRIBUTING.md) and the [contributor guide](docs/contributing/README.md). For the project structure, see the [architecture and repository map](docs/project-overview.md). To review pull requests, see [Review a pull request](docs/contributing/04-review-a-pr.md). Report security issues using [SECURITY.md](.github/SECURITY.md).
+Contributions are welcome. **First step: [say hello on Discord](https://discord.gg/Sjhb3tnq3)**, tell us what you want to work on, and we will point you to a good first task. Then start with [CONTRIBUTING.md](.github/CONTRIBUTING.md) and the [contributor guide](docs/contributing/README.md). For the project structure, see the [architecture and repository map](docs/project-overview.md). To review pull requests, see [Review a pull request](docs/contributing/04-review-a-pr.md). Report security issues using [SECURITY.md](.github/SECURITY.md).
 
 Flisk is MIT-licensed; see [LICENSE](LICENSE). The [license boundary](docs/project/GOVERNANCE.md#license-boundary-and-donation-scope) says which code is MIT and which is downloaded with a key.
 
