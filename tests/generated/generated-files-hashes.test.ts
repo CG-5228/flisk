@@ -7,14 +7,14 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { generateMasterConfigs, isTestFile } from "../../cli/src/generator/template-engine.js";
 import {
   EXTENSION_DIRS,
   resolveExtensionDir,
   resolveTiltfile,
-} from "../../utils/runtime-layout.js";
-import { generateMasterConfigs, isTestFile } from "../template-engine.js";
+} from "../../cli/src/utils/runtime-layout.js";
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const sha256 = (file: string): string =>
   createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 const walk = (dir: string): string[] =>
