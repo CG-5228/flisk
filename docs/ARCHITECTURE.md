@@ -180,7 +180,15 @@ Use this reference table to find the right files, tests, and documentation when 
 
 ---
 
-## 6. Further Reading
+## 6. Source Layout and Compatibility
+
+The extension (`Tiltfile`, `engine/`, `discovery/`, `specs/`, `ext/`) lives under `runtime/` in a source checkout. Packaged bundles (`flisk-cli/` next to the binaries, the files staged into the npm package) and the vendored copy in `.flisk/.flisk-out/flisk-cli-ext/` stay **flat**, so every `load()` path inside the extension is the same in all three places.
+
+- **Layout check:** the CLI treats a tree as valid only when the Tiltfile and all four directories come from one layout, all under `runtime/` or all at the root. A tree that mixes the two, or lacks a directory, is rejected, and `flisk runtime --check-assets` and the "extension not found" warning name the offending entries.
+- **Older CLIs:** a CLI released before the layout resolver looks for the flat layout only. It cannot vendor from a source checkout of this repository; point it at a released bundle (`flisk-cli/` or the installed npm package) instead.
+- **`ext://flisk-cli` from a source checkout:** the repository root no longer has a `Tiltfile`. Reference the extension with `repo_path='runtime'`: `v1alpha1.extension(name='flisk-cli', repo_name='flisk-cli-local', repo_path='runtime')`. An empty `repo_path` fails with `no extension tiltfile found`. Generated projects are unaffected, because they point at the flat vendored copy.
+
+## 7. Further Reading
 
 - [Contributor Guide](contributing/README.md): Quickstart setup, Dev Containers, and opening pull requests.
 - [Feature Recipes](contributing/02-feature-recipes.md): Step-by-step recipes for specific contributor tasks.

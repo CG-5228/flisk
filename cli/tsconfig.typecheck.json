@@ -5,6 +5,6 @@
     "rootDir": "..",
     "paths": { "vitest": ["./node_modules/vitest"] }
   },
-  "include": ["src/**/*", "../tests/generated/**/*"],
+  "include": ["src/**/*", "../tests/generated/**/*", "../tests/runtime-layout/**/*"],
   "exclude": ["node_modules", "dist"]
 }
