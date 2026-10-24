@@ -26,7 +26,7 @@ The CI pipeline SHALL use an exact version for the registry install and SHALL NO
 #### Scenario: Version is explicit
 
 - **WHEN** the job resolves the package to install
-- **THEN** the version is taken from the exact `FLISK_NPM_VERSION` value in the workflow
+- **THEN** the version is the exact pin in `.github/npm-package-smoke/package.json`, installed through its lockfile
 
 ### Requirement: Published-package failures gate the workflow
 

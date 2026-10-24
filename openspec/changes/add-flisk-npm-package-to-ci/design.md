@@ -17,7 +17,7 @@
 ## Approach
 
 1. Add `npm-package-smoke` to `.github/workflows/ci.yml`, gated on `docs_only` like `package-smoke`.
-2. Pin `FLISK_NPM_VERSION` as an exact version in the job `env`, not a range or `latest`.
+2. Pin an exact version in `.github/npm-package-smoke/package.json` and commit its lockfile; the job installs with `npm ci`, never a range or `latest`.
 3. Set up Bun (existing composite action) and Node 22.12+, then run `npm install --global @flisk-sh/flisk@<pin>`.
 4. Compare `flisk --version` output with the pin and fail on mismatch.
 5. Add the job to the `summary` job's `needs` so it gates the required check.

@@ -431,9 +431,6 @@ jobs:
     # Skip on docs-only PRs; a skipped job still satisfies required checks.
     if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
     timeout-minutes: 3
-    env:
-      # Pinned exact version of @flisk-sh/flisk on the public npm registry. Bump deliberately.
-      FLISK_NPM_VERSION: 1.4.0
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -444,19 +441,19 @@ jobs:
         with:
           node-version: 22.12
 
+      # The pin lives in .github/npm-package-smoke/package-lock.json; npm ci installs exactly that tree.
       - name: Install the pinned package from npm
-        working-directory: ${{ runner.temp }}
         run: |
-          npm install --global --no-audit --no-fund "@flisk-sh/flisk@${FLISK_NPM_VERSION}"
+          npm ci --prefix .github/npm-package-smoke --ignore-scripts --no-audit --no-fund
 
       - name: Verify the installed version
-        working-directory: ${{ runner.temp }}
         run: |
-          installed="$(flisk --version)"
-          echo "Installed: ${installed}"
+          pinned="$(node -p "require('./.github/npm-package-smoke/package.json').dependencies['@flisk-sh/flisk']")"
+          installed="$(./.github/npm-package-smoke/node_modules/.bin/flisk --version)"
+          echo "Pinned: ${pinned}  Installed: ${installed}"
           case "${installed}" in
-            *"${FLISK_NPM_VERSION}"*) ;;
-            *) echo "::error::flisk --version (${installed}) does not match pinned ${FLISK_NPM_VERSION}"; exit 1 ;;
+            *"${pinned}"*) ;;
+            *) echo "::error::flisk --version (${installed}) does not match pinned ${pinned}"; exit 1 ;;
           esac
 
   secret-scan:

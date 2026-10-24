@@ -3,7 +3,7 @@
 ## 1. Pin the published version
 
 - [x] 1.1 Confirm the version to pin with `npm view @flisk-sh/flisk version` and confirm it matches the release being verified. (1.4.0 is live on npm.)
-- [x] 1.2 Set `FLISK_NPM_VERSION` in the `npm-package-smoke` job to that exact version.
+- [x] 1.2 Pin that exact version in `.github/npm-package-smoke/package.json` and its lockfile.
 
 ## 2. CI integration
 
@@ -16,7 +16,7 @@
 ## 3. Documentation
 
 - [x] 3.1 Document why the registry package is verified in CI (`CONTRIBUTING.md`).
-- [x] 3.2 Document the bump procedure for `FLISK_NPM_VERSION` (`CONTRIBUTING.md`).
+- [x] 3.2 Document the bump procedure for the pinned version (`CONTRIBUTING.md`).
 
 ## 4. Validation
 
