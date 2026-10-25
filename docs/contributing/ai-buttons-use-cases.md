@@ -42,6 +42,8 @@ Reply to a post on X with `@grok bubbles` and a few words about an app. Grok ans
 - The same words always give the same plan, so a link you share means the same stack to the next person.
 - The live run is read-only for visitors on the Tilt page. They can watch, not start or stop services.
 
+**Make one for a friend:** reply to their post, or to your own, with `@grok build a Flisk demo for @someone` and say what they build. The link uses their handle, such as `demo.flisk.sh/someone/what-they-build`. It is the same flow as above, so the same handle and words always give the same demo.
+
 **Limits to know:**
 
 - Flisk is a local development tool. A demo is not a production deployment, and the live run is temporary, on shared runners.
@@ -71,7 +73,7 @@ Every PR description ends with **Review this PR in**: **Grok**, **Claude**, and 
 
 **Watch for:** the AI can invent a problem or miss a real one. Check every point in the code before you copy it. The review that counts is the one you submit under your own name.
 
-You can also add the same kind of button to your own repository with the [flisk-pr-review-buttons skill](https://skills.sh/flisk-sh/flisk-skills/flisk-pr-review-buttons).
+You can also add the same kind of button to your own repository with the [flisk-pr-review-buttons skill](https://skills.sh/flisk-sh/flisk-skills/flisk-pr-review-buttons). Install the skill set with `npx skills add flisk-sh/flisk-skills`.
 
 **If the buttons are missing:** edit the PR description and save it. The workflow adds the section on the next update. Maintainers can run the workflow by hand from the **Actions** tab to add buttons to every open PR.
 
@@ -143,3 +145,5 @@ Describe a picture in one line, then ask Grok to change one area of it. This sui
 - [Review a pull request](04-review-a-pr.md)
 - [Open a pull request](03-open-a-pr.md)
 - [Contributor guide](README.md)
+- [Agent-facing contracts](../agents/llms.txt): the repository's index for AI agents
+- [Product llms.txt](https://flisk.sh/llms.txt): the public index for demos, bubbles, and skills
