@@ -109,6 +109,9 @@ export const nextFrontendProvider = {
         "@types/react-dom": "^19.0.0",
         // `next build` type-checks through the TypeScript JavaScript API.
         typescript: "^5.9.0",
+        // The image installs with npm, which enforces peer ranges: vitest 5 peers on @types/node ^22 || >=24, and the
+        // scaffold's ^20 otherwise fails `npm install` with ERESOLVE.
+        "@types/node": "^22.0.0",
     },
     compilerOptions: {},
     scripts: {

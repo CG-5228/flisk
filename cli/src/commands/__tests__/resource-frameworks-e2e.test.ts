@@ -509,6 +509,8 @@ describe("frontend resource framework selection", () => {
     expect(service.appType).toBe("frontend");
     expect(pkg.dependencies).toHaveProperty("next");
     expect(pkg.devDependencies).not.toHaveProperty("vite");
+    // npm installs the image and enforces peers: vitest 5 accepts @types/node ^22 or >=24, not the scaffold's ^20.
+    expect(pkg.devDependencies["@types/node"]).toBe("^22.0.0");
     expect(pkg.scripts.dev).toBe("next dev");
     expect(pkg.scripts.build).toBe("next build");
     expect(pkg.scripts).not.toHaveProperty("predev");
