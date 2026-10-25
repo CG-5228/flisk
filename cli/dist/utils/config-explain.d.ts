@@ -16,6 +16,7 @@ export interface ConfigFileExplanation {
 }
 /**
  * Explains one project file using the generated-path allowlist and the hand-edit check that `flisk up` runs.
- * Throws a FliskError for a path outside the project, a missing file, or a directory.
+ * `file` resolves against the current directory, as shell paths do. Throws a FliskError for a path outside the
+ * project, a missing file, or a directory.
  */
 export declare function explainConfigFile(projectRoot: string, file: string): ConfigFileExplanation;

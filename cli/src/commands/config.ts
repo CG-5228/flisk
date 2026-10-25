@@ -372,7 +372,7 @@ export const configCommand = new Command("config")
       .description(
         "Explain whether a project file is Flisk-generated and what editing it does on flisk up",
       )
-      .argument("<file>", "Project file to explain")
+      .argument("<file>", "Project file to explain, relative to the current directory or absolute")
       .option("--json", "Emit a machine-readable explanation")
       .action(async (file: string, options) => {
         const action = async (): Promise<void> => {
