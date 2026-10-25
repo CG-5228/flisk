@@ -2,7 +2,7 @@
 
 Grok shows up in Flisk in four ways: live demo stacks from a reply on X, buttons that open Grok with a PR or issue already set up, the README's build link, and general Grok features that work well next to a Flisk project. This page explains each one, when to use it, and what to watch for.
 
-Grok is only the trigger in most of these. Flisk and GitHub do the work. Nothing here sends your code or secrets to an AI unless you choose to paste them.
+Grok is only the trigger in most of these. Flisk and GitHub do the work. Each button opens an external AI service with a prepared prompt. Depending on the workflow, that service may read the referenced PR or issue, and it may process any content it retrieves. Review the prompt and the provider's data-handling policy, and never include secrets or private repository content unless you are authorized to share it.
 
 | Use case | Who it is for | Where it starts |
 |---|---|---|
@@ -80,6 +80,12 @@ You can also add the same kind of button to your own repository with the [flisk-
 ## Use case 3: resolve a merge conflict
 
 When a PR conflicts with `main`, one comment appears with **Resolve conflict** buttons for Grok, Claude, and Codex. Each gives the AI step-by-step instructions to merge `main` into the branch and push the fix.
+
+Before you click, check the following:
+
+- The AI you use has only the repository permissions you intend to grant. Whether it can push or open a replacement PR depends on those permissions and on its own settings.
+- You will review the resulting diff and run the relevant tests before you accept the change.
+- Treat any replacement PR as untrusted until you have reviewed it independently.
 
 1. Click the AI you already use.
 2. Let it follow the instructions.
