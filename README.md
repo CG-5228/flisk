@@ -736,4 +736,4 @@ Flisk is MIT-licensed; see [LICENSE](LICENSE). The [license boundary](docs/proje
 
 Project governance: [GOVERNANCE.md](docs/project/GOVERNANCE.md), [MAINTAINERS.md](docs/project/MAINTAINERS.md), [ADOPTERS.md](docs/project/ADOPTERS.md).
 
-Using Flisk in Slack or Discord? Get the [Flisk green thunder emoji](https://github.com/flisk-sh/flisk-emoji) (SVG and PNG, MIT).
+<img src='https://raw.githubusercontent.com/flisk-sh/flisk-emoji/main/png/flisk-thunder-64.png' width='20' alt='flisk'> Using Flisk in Slack or Discord? Get the [Flisk green thunder emoji](https://github.com/flisk-sh/flisk-emoji) (SVG and PNG, MIT).
