@@ -41,15 +41,28 @@ load("../compose/unsafe_value.star", "reject_unsafe_value")
 load("../constants.star", "PROJECT_NAME_HYPHEN")
 
 
+def _project_slug():
+    """The project name with every character except letters and digits written as `_` plus its six-digit hex code.
+
+    The result has no `-` in it, so the first `-` in a scoped name always separates the project from the resource. That
+    keeps the mapping one-to-one: `team` + `app-api` and `team-app` + `api` get different names, and so do `a-b` and `a_b`.
+    """
+    return "".join([ch if ch.isalnum() else "_" + _hex6(ord(ch)) for ch in PROJECT_NAME_HYPHEN.elems()])
+
+
+def _hex6(code):
+    """`code` in hex, zero-padded to six digits so every escape has the same width."""
+    return ("000000" + "%x" % code)[-6:]
+
+
 def traefik_scoped_name(name):
     """Router, middleware and service name for `name`, prefixed with this Flisk project.
 
     One Traefik instance serves every Flisk project on the machine, and it keys routers, middlewares and services by name
     alone. Two projects that name a resource the same (`api`, say) would define the same router twice, and Traefik drops both.
-    The project prefix keeps them apart. Characters outside Traefik's safe set become `-`.
+    The project prefix keeps them apart.
     """
-    slug = "".join([ch if ch.isalnum() or ch == "-" else "-" for ch in PROJECT_NAME_HYPHEN.elems()])
-    return slug + "-" + name
+    return _project_slug() + "-" + name
 
 
 def get_frontend_traefik_labels(res_name, domain, base_path, port, traefik_host=None, manifest=None):

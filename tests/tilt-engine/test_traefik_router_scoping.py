@@ -84,10 +84,10 @@ def test_traefik_names_are_prefixed_with_their_project(tmp_path):
 
     for kind in ("backend", "frontend"):
         for name in defined_names(first[kind]):
-            assert name.startswith("app-demo-"), (kind, name)
+            assert name.startswith("app_00002ddemo-"), (kind, name)
     # The project router is the one reported as colliding in the bug; its name and middleware must match each other.
-    assert "traefik.http.routers.app-demo-api-project.middlewares=app-demo-api-strip-prefix-project" in first["backend"]
-    assert "traefik.http.middlewares.app-demo-api-strip-prefix-project.stripprefix.prefixes=/api/api" in first["backend"]
+    assert "traefik.http.routers.app_00002ddemo-api-project.middlewares=app_00002ddemo-api-strip-prefix-project" in first["backend"]
+    assert "traefik.http.middlewares.app_00002ddemo-api-strip-prefix-project.stripprefix.prefixes=/api/api" in first["backend"]
 
 
 @TILT_REQUIRED
@@ -95,5 +95,22 @@ def test_routing_rules_still_follow_the_project_host(tmp_path):
     first = run_project(tmp_path, "app-demo", LABELS_BODY)
     second = run_project(tmp_path, "proj2", LABELS_BODY)
 
-    assert "traefik.http.routers.app-demo-api-project.rule=Host(`api.app-demo.localhost`)" in first["backend"]
+    assert "traefik.http.routers.app_00002ddemo-api-project.rule=Host(`api.app-demo.localhost`)" in first["backend"]
     assert "traefik.http.routers.proj2-api-project.rule=Host(`api.proj2.localhost`)" in second["backend"]
+
+
+RESOURCE_BODY = """
+load('@NETWORKING/traefik.star', 'get_backend_traefik_labels')
+
+manifest = {'appType': 'backend', 'stack': 'api', 'port': 4000}
+r = {'backend': get_backend_traefik_labels(RESOURCE, 'api.backend.local', '', RESOURCE, 4000, '/health', manifest=manifest)}
+"""
+
+
+@TILT_REQUIRED
+def test_project_and_resource_pairs_that_join_to_the_same_text_stay_distinct(tmp_path):
+    """`team` + `app-api` and `team-app` + `api` both used to join to `team-app-api`, so their routers collided."""
+    first = run_project(tmp_path, "team", RESOURCE_BODY.replace("RESOURCE", "'app-api'"))
+    second = run_project(tmp_path, "team-app", RESOURCE_BODY.replace("RESOURCE", "'api'"))
+
+    assert defined_names(first["backend"]).isdisjoint(defined_names(second["backend"]))
