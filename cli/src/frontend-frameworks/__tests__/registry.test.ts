@@ -75,8 +75,12 @@ describe("frontend framework resolution", () => {
     const manifest = createServiceJson("fe-next", "frontend", "app", 3000, [], "next");
     expect(manifest.healthCheckPath).toBe("/fe-next/health");
     // A Vite SPA keeps the engine default (/health, served by nginx).
-    expect(createServiceJson("web", "frontend", "app", 3000, [], "react").healthCheckPath).toBeUndefined();
-    const route = getFrontendFramework("next", "fe-next").createFiles("fe-next").find((f) => f.filename === "src/app/health/route.ts");
+    expect(
+      createServiceJson("web", "frontend", "app", 3000, [], "react").healthCheckPath,
+    ).toBeUndefined();
+    const route = getFrontendFramework("next", "fe-next")
+      .createFiles("fe-next")
+      .find((f) => f.filename === "src/app/health/route.ts");
     expect(route?.content).toContain("export function GET()");
   });
 
