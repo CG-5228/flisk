@@ -406,6 +406,13 @@ for needle in ['AS development', 'next", "dev"', 'AS build', 'next build', 'AS p
     if needle not in text: fail('missing ' + needle)
 if 'nginx' in text: fail('a Next.js image must not use nginx')
 if 'bun' in text: fail('a Next.js image must not use Bun')
+if 'l4-backend-node:latest' not in text: fail('the golden Node layer is the default base')
+if 'USER app' not in text: fail('the golden path runs the production stage as app')
+golden_off = generate_next_dockerfile('services/app/web', 3000, False)
+if 'l4-backend-node' in golden_off: fail('without the golden image the base must be the upstream node image')
+if 'node:22-slim@sha256' not in golden_off: fail('the upstream node image must be pinned by digest')
+if 'apt-get install' not in golden_off: fail('the upstream image needs curl installed')
+if 'USER node' not in golden_off: fail('the upstream path runs as the node user')
 `,
     });
 

@@ -378,6 +378,7 @@ def _generate_all_configs_for_resource(
         dockerfile_content = Docker.next_frontend(
             res_path=resource_path,
             port=resource_config.get('port', manifest.get('port', BASE_PORT_FRONTEND)),
+            use_golden=should_enable('golden-image'),
         )
     elif is_frontend:
         target_path = resource_config.get('target_path', '/usr/share/nginx/html')
