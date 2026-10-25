@@ -64,7 +64,17 @@ export default function HealthCard() {
   useEffect(() => {
     const controller = new AbortController();
     fetch(API_URL + '/health', { signal: controller.signal })
-      .then(async (response) => setHealth({ ok: response.ok, body: await response.json() }))
+      .then(async (response) => {
+        // Read the body as text first: a non-JSON error page must show its real status, not an unreachable backend.
+        const text = await response.text();
+        let body: unknown = text;
+        try {
+          body = JSON.parse(text);
+        } catch {
+          // keep the raw text
+        }
+        setHealth({ ok: response.ok, body: { status: response.status, body } });
+      })
       .catch((error: unknown) => {
         if (!controller.signal.aborted) setHealth({ ok: false, body: { error: String(error) } });
       });
