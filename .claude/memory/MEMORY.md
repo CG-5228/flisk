@@ -18,7 +18,7 @@ Hard-won, repo-specific facts for anyone (human or agent) working here. Keep ent
 
 - 2026-10-08 (#88): In doctor-runtime tests on Windows, runHostCommand uses execFileSync instead of the injected exec callback; mock execFileSync or stub process.platform when a test needs to provide command output.
 
-- 2026-10-25: `flisk up` refuses to start ("Environment is already running on port 10350") while any other project's Tilt holds 10350-10359, so a live e2e on a shared machine needs those stacks stopped first; check `ps -eo command | grep "tilt up"` before a live run, and do not kill another session's Tilt.
+- 2026-10-25: `flisk up` checks only Tilt port 10350 (or `TILT_PORT`). A Tilt owned by another project on that port makes it warn and pick another port, or fail with `TILT_PORT_IN_USE` when `TILT_PORT` is set (`cli/src/commands/up.ts`). It refused with "Environment is already running on port 10350" when a foreign Tilt held 10350 and `classifyTiltPorts` did not flag it as foreign; the cause is not established, so run `flisk down` in the owning project or stop that Tilt before a live run, and do not kill another session's Tilt.
 
 ## PR and CI traps
 - 2026-10-22: A test that spawns a real server must take its port from the OS (`server.listen(0)`), not from a guessed range. `resource-agent.test.ts` guessed `4800 + random(500)`, which is inside the agent range the CLI assigns to scaffolded services, so it collided with a parallel worker and the runtime exited before binding — the CI `Test` job failed with "agent did not start" and no diagnostic, because the child's stdio was `ignore`. Take the port from the OS, capture the child's stdout/stderr, and kill it in `finally` so a failed run does not keep holding the port.
