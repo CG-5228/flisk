@@ -39,7 +39,7 @@ export function parseStackResourceConfig(content: string, configPath: string): S
   }
 }
 
-function normalizeResourceNames(names: string[]): string[] {
+export function normalizeResourceNames(names: string[]): string[] {
   const normalizedNames = names.flatMap((name) =>
     name
       .split(",")

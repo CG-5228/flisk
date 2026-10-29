@@ -5,6 +5,7 @@ type StackResourceConfig = {
     stack?: string;
 };
 export declare function parseStackResourceConfig(content: string, configPath: string): StackResourceConfig;
+export declare function normalizeResourceNames(names: string[]): string[];
 /**
  * What `flisk stack --json` reports: the stacks with their resource counts and the resources without a stack, both as
  * they are after the run, plus the stack this run assigned to (null for --list) and the resources it assigned.
