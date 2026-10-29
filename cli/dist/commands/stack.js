@@ -24,7 +24,7 @@ export function parseStackResourceConfig(content, configPath) {
         ]);
     }
 }
-function normalizeResourceNames(names) {
+export function normalizeResourceNames(names) {
     const normalizedNames = names.flatMap((name) => name
         .split(",")
         .map((part) => part.trim())
