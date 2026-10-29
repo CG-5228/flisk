@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Flisk Landscape contributors
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from "vitest";
+import { portFromEnv } from "../utils/generated-port.js";
 import { customAgentRuntime, getCustomAgentIndexTemplate } from "./custom.js";
 
 const SERVICE = "support-agent";
@@ -55,7 +56,7 @@ describe.each(["files", "postgres"] as const)("%s durability template", (durabil
     expect(index).toContain("url.pathname === '/turn' && req.method === 'POST'");
     expect(index).toContain("url.pathname === '/session' && req.method === 'GET'");
     expect(index).toContain("sendJson(res, ok ? 200 : 503, { ready: ok, durability: DURABILITY })");
-    expect(index).toContain("const PORT = Number(process.env.PORT || 3000);");
+    expect(index).toContain(portFromEnv("PORT"));
     expect(index).toContain("server.listen(PORT, '0.0.0.0'");
   });
 

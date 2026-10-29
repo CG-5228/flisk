@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Flisk Landscape contributors
 // SPDX-License-Identifier: MIT
 import type { BackendFrameworkProvider } from "../backend-frameworks/types.js";
+import { portFromEnv } from "../utils/generated-port.js";
 
 /**
  * The `custom` agent runtime: a plain Bun HTTP service with no model SDK, no agent framework and no vendor dependency.
@@ -22,7 +23,7 @@ import { Client } from 'pg';
 // /health: the process is alive. /ready: the checkpoint store is reachable. Idle is healthy, so /health never checks the store.
 
 const DURABILITY = 'postgres';
-const PORT = Number(process.env.PORT || 3000);
+${portFromEnv("PORT")}
 const DRAIN_TIMEOUT_MS = 10_000;
 const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres';
 
@@ -247,7 +248,7 @@ import { join } from 'node:path';
 
 const DURABILITY = 'files';
 const STATE_DIR = process.env.AGENT_STATE_DIR || join(process.cwd(), '.agent-state');
-const PORT = Number(process.env.PORT || 3000);
+${portFromEnv("PORT")}
 const DRAIN_TIMEOUT_MS = 10_000;
 
 interface Checkpoint {

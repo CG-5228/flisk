@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Flisk Landscape contributors
+// SPDX-License-Identifier: MIT
+import { portFromEnv } from "../utils/generated-port.js";
 export function getMcpIndexTemplate(name) {
     return `import { createServer } from 'node:http';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -61,7 +64,7 @@ const httpServer = createServer(async (req, res) => {
   res.end(JSON.stringify({ error: 'not_found' }));
 });
 
-const port = Number(process.env.PORT || 3000);
+${portFromEnv()}
 
 // Bind beyond loopback: Traefik reaches the container over the Docker network.
 httpServer.listen(port, '0.0.0.0', () => {

@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Flisk Landscape contributors
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from "vitest";
+import { portFromEnv } from "../utils/generated-port.js";
 import { getMcpIndexTemplate, mcpBackendProvider } from "./mcp.js";
 
 describe("mcp backend provider", () => {
@@ -53,7 +54,7 @@ describe("getMcpIndexTemplate", () => {
   });
 
   it("binds beyond loopback on the injected port", () => {
-    expect(index).toContain("const port = Number(process.env.PORT || 3000);");
+    expect(index).toContain(portFromEnv());
     expect(index).toContain("httpServer.listen(port, '0.0.0.0'");
   });
 });
