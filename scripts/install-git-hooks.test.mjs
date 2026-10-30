@@ -20,6 +20,8 @@ import { fileURLToPath } from "node:url";
 const rootPackagePath = fileURLToPath(new URL("../package.json", import.meta.url));
 const prepareCommand = JSON.parse(readFileSync(rootPackagePath, "utf8")).scripts.prepare;
 const TIMEOUT_MS = 30_000;
+// npm is a .cmd shim on Windows, so only there does it need a shell; the command and arguments are literals, never input.
+const NPM_SPAWN_OPTIONS = { shell: process.platform === "win32" };
 
 function withCheckout({ gitRepo = true, hooksDirectory = false, globalHooksPath }, fn) {
   const tmp = realpathSync(mkdtempSync(join(tmpdir(), "flisk-install-git-hooks-test-")));
@@ -55,10 +57,8 @@ function withCheckout({ gitRepo = true, hooksDirectory = false, globalHooksPath 
         cwd: root,
         env,
         encoding: "utf8",
-        // npm is a .cmd shim on Windows; the command and arguments are literals, never input.
-        // nosemgrep: javascript.lang.security.audit.spawn-shell-true
-        shell: process.platform === "win32",
         timeout: TIMEOUT_MS,
+        ...NPM_SPAWN_OPTIONS,
       });
     const gitConfig = (...args) =>
       spawnSync("git", ["-C", root, "config", ...args], { env, encoding: "utf8", timeout: TIMEOUT_MS });

@@ -46,7 +46,7 @@ function execSafe(command, args, options = {}) {
         });
     });
 }
-function determineDefaultDomain() {
+export function determineDefaultDomain() {
     const projectRoot = findProjectRoot();
     if (projectRoot) {
         const projectConfig = readProjectConfig(projectRoot);
@@ -113,7 +113,7 @@ function determineDefaultDomain() {
     }
     return "localhost";
 }
-async function checkServiceStatus(serviceName, port, url) {
+export async function checkServiceStatus(serviceName, port, url) {
     if (url) {
         try {
             const validUrl = new URL(url);
