@@ -82,6 +82,97 @@ export function findForeignIngressHolders(holders, projectPrefix) {
     return holders.filter((holder) => !isOwnIngressContainer(holder.name, projectPrefix));
 }
 /**
+ * Tilt persists each resource's disable state in a `<name>-disable` ConfigMap on
+ * first load. When `flisk config regenerate` (or a Tiltfile edit) adds a resource
+ * to the focus allowlist while Tilt is already running, Tilt reloads the Tiltfile
+ * but leaves that ConfigMap at `isDisabled: "true"`, so `disableStatus.state`
+ * stays `Disabled` until `flisk down && flisk up`.
+ *
+ * Returns the names of resources in `tilt get uiresources -o json` that the
+ * Tiltfile enables for the current run yet Tilt still reports as `Disabled`.
+ */
+export function findStaleDisabledResources(jsonText, projectRoot = findProjectRoot()) {
+    let items = [];
+    try {
+        const parsed = JSON.parse(jsonText);
+        items = parsed.items ?? [];
+    }
+    catch {
+        return [];
+    }
+    if (items.length === 0)
+        return [];
+    const enabledNames = new Set(items
+        .filter((item) => item.status?.disableStatus?.state !== "Disabled")
+        .flatMap((item) => (item.metadata?.name ? [item.metadata.name] : [])));
+    if (enabledNames.size === 0 || (enabledNames.size === 1 && enabledNames.has("(Tiltfile)"))) {
+        return [];
+    }
+    const autoDiscoverEnabled = process.env.AUTO_DISCOVER?.toLowerCase() !== "false";
+    const expectedEnabled = new Set();
+    const tiltfilePath = projectRoot ? join(projectRoot, ".flisk", ".flisk-out", "Tiltfile") : null;
+    if (tiltfilePath && existsSync(tiltfilePath)) {
+        try {
+            const tiltfile = readFileSync(tiltfilePath, "utf-8");
+            const listMatch = tiltfile.match(/^\s*_ALWAYS_ENABLED_INFRA_RESOURCES\s*=\s*\[([^\]]*)\]/m);
+            if (listMatch?.[1]) {
+                for (const match of listMatch[1].matchAll(/['"]([^'"]+)['"]/g)) {
+                    if (match[1])
+                        expectedEnabled.add(match[1]);
+                }
+            }
+            for (const match of tiltfile.matchAll(/_ALWAYS_ENABLED_INFRA_RESOURCES\.append\(\s*['"]([^'"]+)['"]\s*\)/g)) {
+                const name = match[1];
+                if (!name)
+                    continue;
+                if (name === "service-discovery-daemon" && !autoDiscoverEnabled)
+                    continue;
+                expectedEnabled.add(name);
+            }
+            for (const match of tiltfile.matchAll(/config\.set_enabled_resources\(\s*\[([^\]]*)\]\s*\)/g)) {
+                for (const itemMatch of (match[1] ?? "").matchAll(/['"]([^'"]+)['"]/g)) {
+                    if (itemMatch[1])
+                        expectedEnabled.add(itemMatch[1]);
+                }
+            }
+        }
+        catch {
+            // Fall back to defaults below if the Tiltfile cannot be read.
+        }
+    }
+    else {
+        expectedEnabled.add("init-networks");
+        expectedEnabled.add("traefik");
+        expectedEnabled.add("golden-layers-build");
+        if (autoDiscoverEnabled) {
+            expectedEnabled.add("service-discovery-daemon");
+        }
+        expectedEnabled.add("postgres");
+    }
+    if (projectRoot && projectConfigEnablesVerdaccio(projectRoot)) {
+        expectedEnabled.add("verdaccio");
+    }
+    for (const item of items) {
+        const name = item.metadata?.name;
+        if (name?.startsWith("provision-db-")) {
+            expectedEnabled.add(name);
+        }
+    }
+    for (const enabled of [...enabledNames]) {
+        if (enabled === "(Tiltfile)")
+            continue;
+        for (const suffix of ["-run-only", "-config-gen", "-typecheck", "-image"]) {
+            expectedEnabled.add(`${enabled}${suffix}`);
+        }
+    }
+    return items
+        .filter((item) => {
+        const name = item.metadata?.name;
+        return Boolean(name && expectedEnabled.has(name) && item.status?.disableStatus?.state === "Disabled");
+    })
+        .map((item) => item.metadata?.name);
+}
+/**
  * Resource names with `sablier: {enable: true, deferStart: true}` in their
  * manifest (openspec/changes/prioritized-cold-start): these are expected to
  * sit at `runtimeStatus: none` until their first request, not a sign of
@@ -637,7 +728,16 @@ export function checkTiltResourceHealth(exec = execSync) {
             message: "No Tilt UIResources found",
         };
     }
+    const staleDisabled = findStaleDisabledResources(jsonText);
     if (parsed.failures.length === 0) {
+        if (staleDisabled.length > 0) {
+            return {
+                name: "Tilt Resources",
+                didPass: false,
+                message: `Tilt keeps ${formatCount(staleDisabled.length, "resource")} Disabled that the Tiltfile enables (${staleDisabled.join(", ")}) — restart needed: flisk down && flisk up`,
+                fix: "Restart the running stack so Tilt applies the updated enable list: flisk down && flisk up",
+            };
+        }
         const deferredNote = parsed.deferredCount > 0 ? `, ${parsed.deferredCount} deferred` : "";
         return {
             name: "Tilt Resources",
@@ -664,6 +764,9 @@ export function checkTiltResourceHealth(exec = execSync) {
     const deferredNote = parsed.deferredCount > 0
         ? `\n    ${formatCount(parsed.deferredCount, "resource")} intentionally deferred (sablier.deferStart) — not started until first request, unrelated to the failures above.`
         : "";
+    const staleDisabledNote = staleDisabled.length > 0
+        ? `\n    ${formatCount(staleDisabled.length, "resource")} still Disabled that the Tiltfile enables (${staleDisabled.join(", ")}) — restart needed: flisk down && flisk up`
+        : "";
     const hasPortConflict = ordered.some((failure) => /port is already allocated/i.test(failure.error));
     const hasRegistryFailure = ordered.some((failure) => isRegistryRelatedBuildError(failure.error) ||
         isRegistryRelatedBuildError(summarizeTiltBuildError(failure.error)));
@@ -686,7 +789,7 @@ export function checkTiltResourceHealth(exec = execSync) {
     return {
         name: "Tilt Resources",
         didPass: false,
-        message: `Tilt reports ${formatCount(parsed.failures.length, "failed resource")}:\n    ${details}${omittedNote}${pendingNote}${deferredNote}`,
+        message: `Tilt reports ${formatCount(parsed.failures.length, "failed resource")}:\n    ${details}${omittedNote}${pendingNote}${deferredNote}${staleDisabledNote}`,
         fix,
     };
 }

@@ -1,3 +1,5 @@
+import { findStaleDisabledResources } from "./doctor-runtime.js";
+export { findStaleDisabledResources };
 export interface ReadinessResult {
     ready: boolean;
     failures: Array<{

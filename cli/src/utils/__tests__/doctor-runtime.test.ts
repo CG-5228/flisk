@@ -14,6 +14,7 @@ import {
   describeTiltFailure,
   findForeignIngressHolders,
   findMissingHealthRoutes,
+  findStaleDisabledResources,
   getDeferredResourceNames,
   HOST_PORT_FIXES,
   HOST_PORTS,
@@ -227,6 +228,45 @@ describe("doctor-runtime utilities", () => {
       expect(result.didPass).toBe(true);
       expect(result.isSkipped).toBe(true);
       expect(result.message).toBe("No Tilt UIResources found");
+    });
+
+    it("detects resources that Tilt keeps Disabled after the Tiltfile enables them", () => {
+      const fixture = JSON.stringify({
+        items: [
+          {
+            metadata: { name: "traefik" },
+            status: { updateStatus: "ok", runtimeStatus: "ok" },
+          },
+          {
+            metadata: { name: "orders-api" },
+            status: { updateStatus: "ok", runtimeStatus: "ok" },
+          },
+          {
+            metadata: { name: "service-discovery-daemon" },
+            status: {
+              updateStatus: "none",
+              runtimeStatus: "none",
+              disableStatus: { state: "Disabled" },
+            },
+          },
+          {
+            metadata: { name: "other-stack-service" },
+            status: {
+              updateStatus: "none",
+              runtimeStatus: "none",
+              disableStatus: { state: "Disabled" },
+            },
+          },
+        ],
+      });
+
+      expect(findStaleDisabledResources(fixture)).toEqual(["service-discovery-daemon"]);
+
+      const result = checkTiltResourceHealth((() => fixture) as never);
+      expect(result.didPass).toBe(false);
+      expect(result.message).toContain("service-discovery-daemon");
+      expect(result.message).toContain("restart needed: flisk down && flisk up");
+      expect(result.fix).toContain("flisk down && flisk up");
     });
   });
 

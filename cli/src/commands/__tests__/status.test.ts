@@ -346,6 +346,41 @@ describe("flisk status", () => {
       expect(JSON.parse(await runStatus(["--json"])).data.tilt.tiltfileError).toBeNull();
     });
 
+    it("reports resources kept Disabled by Tilt that the Tiltfile enables", async () => {
+      const stale = JSON.stringify({
+        items: [
+          {
+            metadata: { name: "orders-api" },
+            status: { updateStatus: "ok", runtimeStatus: "ok" },
+          },
+          {
+            metadata: { name: "service-discovery-daemon" },
+            status: {
+              updateStatus: "none",
+              runtimeStatus: "none",
+              disableStatus: { state: "Disabled" },
+            },
+          },
+          {
+            metadata: { name: "invoices" },
+            status: {
+              updateStatus: "none",
+              runtimeStatus: "none",
+              disableStatus: { state: "Disabled" },
+            },
+          },
+        ],
+      });
+      vi.mocked(tiltGetUiResources).mockResolvedValue(stale);
+
+      const human = await runStatus([]);
+      expect(human).toContain("service-discovery-daemon");
+      expect(human).toContain("restart needed: `flisk down && flisk up`");
+
+      const data = JSON.parse(await runStatus(["--json"])).data;
+      expect(data.tilt.staleDisabled).toEqual(["service-discovery-daemon"]);
+    });
+
     it("shows every service as unknown when no Tilt answers", async () => {
       const output = await runStatus(["--json"]);
       const resources = JSON.parse(output).data.resources as Array<{ status: string }>;

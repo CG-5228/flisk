@@ -4,7 +4,7 @@ import chalk from "chalk";
 import { Command } from "commander";
 import { dependsOnOf } from "../utils/dependency-graph.js";
 import { createDiscoveryContext } from "../utils/discovery-context.js";
-import { getDeferredResourceNames } from "../utils/doctor-runtime.js";
+import { findStaleDisabledResources, getDeferredResourceNames } from "../utils/doctor-runtime.js";
 import { runCommand } from "../utils/errors.js";
 import { formatCount, showDetail, showStep } from "../utils/formatting.js";
 import { getHostPortPlan } from "../utils/host-port-config.js";
@@ -70,6 +70,7 @@ export const statusCommand = new Command("status")
         let readiness = null;
         // The same look at Tilt feeds readiness and each service's state, so `flisk status` and `flisk ui` cannot disagree.
         let serviceStates = nativeStates;
+        let staleDisabled = [];
         const tiltPort = getTiltPollingPort(process.env.TILT_PORT);
         // Port plan is best effort; service URLs are shown in both JSON and terminal output.
         let portPlan = null;
@@ -110,6 +111,12 @@ export const statusCommand = new Command("status")
                 catch {
                     serviceStates = null;
                 }
+                try {
+                    staleDisabled = findStaleDisabledResources(text, projectRoot);
+                }
+                catch {
+                    staleDisabled = [];
+                }
             }
         }
         const tiltfileError = readiness?.failures.find((failure) => failure.name === "(Tiltfile)")?.message ?? null;
@@ -138,6 +145,7 @@ export const statusCommand = new Command("status")
                     resources: tiltResources,
                     readiness,
                     tiltfileError,
+                    staleDisabled,
                 },
                 resourceCount: discovery.resources.length,
                 resources: discovery.resources.map((resource) => ({
@@ -184,6 +192,12 @@ export const statusCommand = new Command("status")
             console.log();
             console.log(chalk.red(`✗ Tilt could not reload the Tiltfile: ${tiltfileError}`));
             showDetail("Fix the cause shown above. If Tilt does not pick the fix up, restart with flisk down and flisk up.");
+            console.log();
+        }
+        if (staleDisabled.length > 0 && !unhealthyOnly) {
+            console.log();
+            console.log(chalk.yellow(`⚠️  Tilt keeps ${formatCount(staleDisabled.length, "resource")} Disabled that the Tiltfile enables: ${staleDisabled.join(", ")}`));
+            showDetail("restart needed: `flisk down && flisk up`");
             console.log();
         }
         // With service states the grouped "Services:" section below replaces the plain per-stack counts.
