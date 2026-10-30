@@ -64,7 +64,7 @@ function execSafe(
   });
 }
 
-function determineDefaultDomain(): string {
+export function determineDefaultDomain(): string {
   const projectRoot = findProjectRoot();
   if (projectRoot) {
     const projectConfig = readProjectConfig(projectRoot);
@@ -142,7 +142,7 @@ function determineDefaultDomain(): string {
   return "localhost";
 }
 
-async function checkServiceStatus(
+export async function checkServiceStatus(
   serviceName: string,
   port?: number,
   url?: string,
