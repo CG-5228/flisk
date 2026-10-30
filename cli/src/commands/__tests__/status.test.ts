@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Flisk Landscape contributors
 // SPDX-License-Identifier: MIT
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,7 +18,10 @@ import { statusCommand } from "../status.js";
 // check what status prints, so both are mocked.
 vi.mock("../../utils/cold-preflight.js", () => ({
   assertMachineReadyOrExit: vi.fn(async () => {}),
-  detectRuntimePrerequisites: vi.fn(() => ({ hasDockerCli: true, hasTiltCli: true })),
+  detectRuntimePrerequisites: vi.fn(() => ({
+    hasDockerCli: true,
+    hasTiltCli: true,
+  })),
   formatRuntimeNextSteps: vi.fn(() => []),
 }));
 vi.mock("../../utils/tilt.js", async (importOriginal) => ({
@@ -36,7 +39,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, "../../../..");
 
 const FIXTURE_SERVICES = [
-  { dir: "services/shop/orders-api", appName: "orders-api", appType: "backend", stack: "shop" },
+  {
+    dir: "services/shop/orders-api",
+    appName: "orders-api",
+    appType: "backend",
+    stack: "shop",
+  },
   {
     dir: "services/shop/orders-web",
     appName: "orders-web",
@@ -44,7 +52,12 @@ const FIXTURE_SERVICES = [
     stack: "shop",
     dependsOn: ["orders-api"],
   },
-  { dir: "services/billing/invoices", appName: "invoices", appType: "backend", stack: "billing" },
+  {
+    dir: "services/billing/invoices",
+    appName: "invoices",
+    appType: "backend",
+    stack: "billing",
+  },
   { dir: "tools/report-job", appName: "report-job", appType: "backend" },
 ];
 
@@ -215,11 +228,20 @@ describe("flisk status", () => {
     expect(JSON.parse(output)).toMatchObject({
       schemaVersion: 1,
       data: {
-        tilt: { available: false, resourcesQueried: false, resources: null, readiness: null },
+        tilt: {
+          available: false,
+          resourcesQueried: false,
+          resources: null,
+          readiness: null,
+        },
         resourceCount: 4,
         stacks: [
           { name: "billing", resourceCount: 1, resources: ["invoices"] },
-          { name: "shop", resourceCount: 2, resources: ["orders-api", "orders-web"] },
+          {
+            name: "shop",
+            resourceCount: 2,
+            resources: ["orders-api", "orders-web"],
+          },
         ],
         unassignedResources: ["report-job"],
       },
@@ -263,7 +285,9 @@ describe("flisk status", () => {
     }
     // The status envelope comes first; vitest turns the following process.exit into an error that prints a second one.
     const envelope = JSON.parse(stripVTControlCharacters(lines.filter(Boolean)[0] ?? "{}"));
-    expect(envelope.errors?.[0]).toMatchObject({ code: "TILT_STATUS_UNAVAILABLE" });
+    expect(envelope.errors?.[0]).toMatchObject({
+      code: "TILT_STATUS_UNAVAILABLE",
+    });
     expect(envelope.errors?.[0]?.message).toMatch(/No Tilt is answering on port \d+/);
     expect(runTilt).not.toHaveBeenCalled();
   });
@@ -324,10 +348,17 @@ describe("flisk status", () => {
             status: {
               updateStatus: "error",
               runtimeStatus: "not_applicable",
-              buildHistory: [{ error: "cycle detected in resource dependency graph: a -> b -> a" }],
+              buildHistory: [
+                {
+                  error: "cycle detected in resource dependency graph: a -> b -> a",
+                },
+              ],
             },
           },
-          { metadata: { name: "orders-api" }, status: { updateStatus: "ok", runtimeStatus: "ok" } },
+          {
+            metadata: { name: "orders-api" },
+            status: { updateStatus: "ok", runtimeStatus: "ok" },
+          },
         ],
       });
       vi.mocked(tiltGetUiResources).mockResolvedValue(broken);
@@ -346,9 +377,68 @@ describe("flisk status", () => {
       expect(JSON.parse(await runStatus(["--json"])).data.tilt.tiltfileError).toBeNull();
     });
 
+    it("reports resources kept Disabled by Tilt that the Tiltfile enables", async () => {
+      const specMasterPath = join(projectRoot, ".flisk", ".flisk-out", "spec.master");
+      const originalSpecMaster = readFileSync(specMasterPath, "utf-8");
+      writeFileSync(
+        specMasterPath,
+        originalSpecMaster.replace(
+          "PRE_ALPHA_RESOURCES = {",
+          'PRE_ALPHA_RESOURCES = {\n"orders-api": True,',
+        ),
+      );
+      try {
+        const stale = JSON.stringify({
+          items: [
+            {
+              metadata: { name: "traefik" },
+              status: { updateStatus: "ok", runtimeStatus: "ok" },
+            },
+            {
+              metadata: { name: "orders-api" },
+              status: {
+                updateStatus: "none",
+                runtimeStatus: "none",
+                disableStatus: { state: "Disabled" },
+              },
+            },
+            {
+              metadata: { name: "service-discovery-daemon" },
+              status: {
+                updateStatus: "none",
+                runtimeStatus: "none",
+                disableStatus: { state: "Disabled" },
+              },
+            },
+            {
+              metadata: { name: "invoices" },
+              status: {
+                updateStatus: "none",
+                runtimeStatus: "none",
+                disableStatus: { state: "Disabled" },
+              },
+            },
+          ],
+        });
+        vi.mocked(tiltGetUiResources).mockResolvedValue(stale);
+
+        const human = await runStatus([]);
+        expect(human).toContain("orders-api");
+        expect(human).toContain("service-discovery-daemon");
+        expect(human).toContain("restart needed: `flisk down && flisk up`");
+
+        const data = JSON.parse(await runStatus(["--json"])).data;
+        expect(data.tilt.staleDisabled).toEqual(["orders-api", "service-discovery-daemon"]);
+      } finally {
+        writeFileSync(specMasterPath, originalSpecMaster);
+      }
+    });
+
     it("shows every service as unknown when no Tilt answers", async () => {
       const output = await runStatus(["--json"]);
-      const resources = JSON.parse(output).data.resources as Array<{ status: string }>;
+      const resources = JSON.parse(output).data.resources as Array<{
+        status: string;
+      }>;
       expect(resources.map((r) => r.status)).toEqual(["unknown", "unknown", "unknown", "unknown"]);
     });
 
@@ -397,7 +487,12 @@ describe("flisk status", () => {
       vi.mocked(tiltGetUiResources).mockResolvedValue(apiDown);
       const data = JSON.parse(await runStatus(["--json"])).data;
       expect(data.stacks).toEqual([
-        { name: "billing", resourceCount: 1, resources: ["invoices"], healthyCount: 1 },
+        {
+          name: "billing",
+          resourceCount: 1,
+          resources: ["invoices"],
+          healthyCount: 1,
+        },
         {
           name: "shop",
           resourceCount: 2,

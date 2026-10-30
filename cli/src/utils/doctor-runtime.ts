@@ -17,6 +17,7 @@ import {
   isTiltResourcePending,
   UNHEALTHY_CONTAINER_MESSAGE,
 } from "./tilt-resource-state.js";
+import { getTiltPollingPort } from "./tilt-startup.js";
 import { findOnPath } from "./which.js";
 
 const EXEC_TIMEOUT_MS = 10_000;
@@ -130,9 +131,165 @@ interface TiltUiResourceItem {
   status?: {
     updateStatus?: string;
     runtimeStatus?: string;
+    disableStatus?: { state?: string };
     buildHistory?: Array<{ error?: string }>;
     composeResourceInfo?: { healthStatus?: string };
   };
+}
+
+/**
+ * Tilt persists each resource's disable state in a `<name>-disable` ConfigMap on
+ * first load. When `flisk config regenerate` (or a Tiltfile edit) adds a resource
+ * to the focus allowlist while Tilt is already running, Tilt reloads the Tiltfile
+ * but leaves that ConfigMap at `isDisabled: "true"`, so `disableStatus.state`
+ * stays `Disabled` until `flisk down && flisk up`.
+ *
+ * Returns the names of resources in `tilt get uiresources -o json` that the
+ * Tiltfile enables for the current run yet Tilt still reports as `Disabled`.
+ */
+export function findStaleDisabledResources(
+  jsonText: string,
+  projectRoot: string | null = findProjectRoot(),
+): string[] {
+  let items: TiltUiResourceItem[] = [];
+  try {
+    const parsed = JSON.parse(jsonText) as { items?: TiltUiResourceItem[] };
+    items = parsed.items ?? [];
+  } catch {
+    return [];
+  }
+  if (items.length === 0) return [];
+
+  const enabledNames = new Set(
+    items
+      .filter((item) => item.status?.disableStatus?.state !== "Disabled")
+      .flatMap((item) => (item.metadata?.name ? [item.metadata.name] : [])),
+  );
+  if (enabledNames.size === 0) {
+    return [];
+  }
+
+  const autoDiscoverEnabled = process.env.AUTO_DISCOVER?.toLowerCase() !== "false";
+  const expectedEnabled = new Set<string>();
+  const focusTargets = new Set<string>();
+
+  const tiltfilePath = projectRoot ? join(projectRoot, ".flisk", ".flisk-out", "Tiltfile") : null;
+  if (tiltfilePath && existsSync(tiltfilePath)) {
+    try {
+      const tiltfile = readFileSync(tiltfilePath, "utf-8");
+      const listMatch = tiltfile.match(/^\s*_ALWAYS_ENABLED_INFRA_RESOURCES\s*=\s*\[([^\]]*)\]/m);
+      if (listMatch?.[1]) {
+        for (const match of listMatch[1].matchAll(/['"]([^'"]+)['"]/g)) {
+          if (match[1]) expectedEnabled.add(match[1]);
+        }
+      }
+      for (const match of tiltfile.matchAll(
+        /_ALWAYS_ENABLED_INFRA_RESOURCES\.append\(\s*['"]([^'"]+)['"]\s*\)/g,
+      )) {
+        const name = match[1];
+        if (!name) continue;
+        if (name === "service-discovery-daemon" && !autoDiscoverEnabled) continue;
+        expectedEnabled.add(name);
+      }
+      for (const match of tiltfile.matchAll(
+        /(?:config\.set_enabled_resources\(\s*\[([^\]]*)\]\s*\)|^\s*_FILTERED_RESOURCES\s*=\s*\[([^\]]*)\])/gm,
+      )) {
+        const listBody = match[1] ?? match[2] ?? "";
+        for (const itemMatch of listBody.matchAll(/['"]([^'"]+)['"]/g)) {
+          if (itemMatch[1]) {
+            expectedEnabled.add(itemMatch[1]);
+            focusTargets.add(itemMatch[1]);
+          }
+        }
+      }
+    } catch {
+      // If the Tiltfile cannot be read, add no names from it. Defaults apply only when the file is missing.
+    }
+  } else {
+    expectedEnabled.add("init-networks");
+    expectedEnabled.add("traefik");
+    expectedEnabled.add("golden-layers-build");
+    if (autoDiscoverEnabled) {
+      expectedEnabled.add("service-discovery-daemon");
+    }
+    expectedEnabled.add("postgres");
+  }
+
+  if (projectRoot) {
+    const specMasterPath = join(projectRoot, ".flisk", ".flisk-out", "spec.master");
+    if (existsSync(specMasterPath)) {
+      try {
+        const specMaster = readFileSync(specMasterPath, "utf-8");
+        for (const preAlphaMatch of specMaster.matchAll(
+          /PRE_ALPHA_RESOURCES\s*=\s*\{([^}]*)\}/gm,
+        )) {
+          for (const entry of (preAlphaMatch[1] ?? "").matchAll(/['"]([^'"]+)['"]\s*:\s*True/g)) {
+            if (entry[1]) focusTargets.add(entry[1]);
+          }
+        }
+      } catch {
+        // Ignore unreadable spec.master.
+      }
+    }
+
+    const projectJsonPath = join(projectRoot, ".flisk", PROJECT_JSON);
+    if (existsSync(projectJsonPath)) {
+      try {
+        const projectJson = JSON.parse(readFileSync(projectJsonPath, "utf-8")) as {
+          phases?: { pre_alpha?: { enabledStacks?: unknown } };
+        };
+        const stacks = projectJson.phases?.pre_alpha?.enabledStacks;
+        if (Array.isArray(stacks)) {
+          for (const stack of stacks) {
+            if (typeof stack === "string" && stack.length > 0) {
+              focusTargets.add(stack);
+            }
+          }
+        }
+      } catch {
+        // Ignore unreadable project.json.
+      }
+    }
+
+    if (focusTargets.size > 0) {
+      for (const target of focusTargets) {
+        expectedEnabled.add(target);
+      }
+      try {
+        for (const res of discoverResourcesFromRoot(projectRoot)) {
+          if (
+            focusTargets.has(res.name) ||
+            (res.stack && focusTargets.has(res.stack)) ||
+            [...focusTargets].some((target) => res.name.startsWith(`${target}-`))
+          ) {
+            expectedEnabled.add(res.name);
+          }
+        }
+      } catch {
+        // Ignore discovery errors outside a valid project root.
+      }
+    }
+
+    if (projectConfigEnablesVerdaccio(projectRoot)) {
+      expectedEnabled.add("verdaccio");
+    }
+  }
+
+  for (const baseName of [...expectedEnabled, ...enabledNames]) {
+    if (baseName === "(Tiltfile)") continue;
+    for (const suffix of ["-run-only", "-config-gen", "-typecheck", "-image"]) {
+      expectedEnabled.add(`${baseName}${suffix}`);
+    }
+  }
+
+  return items
+    .filter((item) => {
+      const name = item.metadata?.name;
+      return Boolean(
+        name && expectedEnabled.has(name) && item.status?.disableStatus?.state === "Disabled",
+      );
+    })
+    .map((item) => item.metadata?.name as string);
 }
 
 /**
@@ -216,7 +373,13 @@ export function parseTiltResourceFailures(
     }
   }
 
-  return { failures, pendingCount, deferredCount, okCount, total: items.length };
+  return {
+    failures,
+    pendingCount,
+    deferredCount,
+    okCount,
+    total: items.length,
+  };
 }
 
 /**
@@ -510,7 +673,11 @@ export function checkIngressPorts(
 }
 
 /** Host ports the generated stack publishes: Traefik (80, 443) and Postgres (5432). */
-export const HOST_PORTS: Record<number, string> = { 80: "HTTP", 443: "HTTPS", 5432: "Postgres" };
+export const HOST_PORTS: Record<number, string> = {
+  80: "HTTP",
+  443: "HTTPS",
+  5432: "Postgres",
+};
 
 type PortState = "free" | "in-use" | "unknown";
 
@@ -731,7 +898,11 @@ export async function checkHostPorts(
     }
   }
   if (problems.length === 0) {
-    return { name: "Host Ports", didPass: true, message: "Host ports are held by this project" };
+    return {
+      name: "Host Ports",
+      didPass: true,
+      message: "Host ports are held by this project",
+    };
   }
 
   const first = inUse.find((port) => problems.some((p) => p.startsWith(`${port} `))) ?? inUse[0];
@@ -757,13 +928,14 @@ export async function checkHostPorts(
  * while apps sit forever in pending/none.
  */
 export function checkTiltResourceHealth(exec: typeof execSync = execSync): CheckResult {
+  const tiltPort = String(getTiltPollingPort(process.env.TILT_PORT));
   let jsonText = "";
   try {
     jsonText = runHostCommand(
       exec,
       "tilt",
-      ["get", "uiresources", "-o", "json"],
-      "tilt get uiresources -o json",
+      ["get", "uiresources", "-o", "json", "--port", tiltPort],
+      `tilt get uiresources -o json --port ${tiltPort}`,
       {
         stdio: "pipe",
         encoding: "utf-8",
@@ -801,7 +973,17 @@ export function checkTiltResourceHealth(exec: typeof execSync = execSync): Check
     };
   }
 
+  const staleDisabled = findStaleDisabledResources(jsonText);
+
   if (parsed.failures.length === 0) {
+    if (staleDisabled.length > 0) {
+      return {
+        name: "Tilt Resources",
+        didPass: false,
+        message: `Tilt keeps ${formatCount(staleDisabled.length, "resource")} Disabled that the Tiltfile enables (${staleDisabled.join(", ")}) — restart needed: flisk down && flisk up`,
+        fix: "Restart the running stack so Tilt applies the updated enable list: flisk down && flisk up",
+      };
+    }
     const deferredNote = parsed.deferredCount > 0 ? `, ${parsed.deferredCount} deferred` : "";
     return {
       name: "Tilt Resources",
@@ -834,6 +1016,10 @@ export function checkTiltResourceHealth(exec: typeof execSync = execSync): Check
     parsed.deferredCount > 0
       ? `\n    ${formatCount(parsed.deferredCount, "resource")} intentionally deferred (sablier.deferStart) — not started until first request, unrelated to the failures above.`
       : "";
+  const staleDisabledNote =
+    staleDisabled.length > 0
+      ? `\n    ${formatCount(staleDisabled.length, "resource")} still Disabled that the Tiltfile enables (${staleDisabled.join(", ")}) — restart needed: flisk down && flisk up`
+      : "";
 
   const hasPortConflict = ordered.some((failure) =>
     /port is already allocated/i.test(failure.error),
@@ -865,7 +1051,7 @@ export function checkTiltResourceHealth(exec: typeof execSync = execSync): Check
   return {
     name: "Tilt Resources",
     didPass: false,
-    message: `Tilt reports ${formatCount(parsed.failures.length, "failed resource")}:\n    ${details}${omittedNote}${pendingNote}${deferredNote}`,
+    message: `Tilt reports ${formatCount(parsed.failures.length, "failed resource")}:\n    ${details}${omittedNote}${pendingNote}${deferredNote}${staleDisabledNote}`,
     fix,
   };
 }

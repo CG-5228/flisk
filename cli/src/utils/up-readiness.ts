@@ -1,8 +1,14 @@
 // Copyright (c) 2026 Flisk Landscape contributors
 // SPDX-License-Identifier: MIT
 import { execFile } from "node:child_process";
-import { getDeferredResourceNames, parseTiltResourceFailures } from "./doctor-runtime.js";
+import {
+  findStaleDisabledResources,
+  getDeferredResourceNames,
+  parseTiltResourceFailures,
+} from "./doctor-runtime.js";
 import { findOnPath } from "./which.js";
+
+export { findStaleDisabledResources };
 
 export interface ReadinessResult {
   ready: boolean;

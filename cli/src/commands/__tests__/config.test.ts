@@ -42,10 +42,22 @@ describe("config command", () => {
           version: "1.0.0",
         },
         phases: {
-          pre_alpha: { name: "pre-alpha", description: "Pre-alpha phase", enabledStacks: [] },
-          alpha: { name: "alpha", description: "Alpha phase", enabledStacks: [] },
+          pre_alpha: {
+            name: "pre-alpha",
+            description: "Pre-alpha phase",
+            enabledStacks: [],
+          },
+          alpha: {
+            name: "alpha",
+            description: "Alpha phase",
+            enabledStacks: [],
+          },
           beta: { name: "beta", description: "Beta phase", enabledStacks: [] },
-          out_of_scope: { name: "out-of-scope", description: "Future phase", enabledStacks: [] },
+          out_of_scope: {
+            name: "out-of-scope",
+            description: "Future phase",
+            enabledStacks: [],
+          },
         },
         optional_infra: {
           monitoring: false,
@@ -281,6 +293,7 @@ describe("config regenerate", () => {
     expect(result.status).toBeUndefined();
     expect(result.stdout).toContain("Regenerating master configuration files");
     expect(result.stdout).toContain("Configuration regenerated!");
+    expect(result.stdout).toContain("restart it (`flisk down && flisk up`)");
     expect(fs.existsSync(path.join(root, ".flisk", ".flisk-out", "spec.master"))).toBe(true);
   });
 
@@ -335,7 +348,12 @@ describe("config verify", () => {
     const root = createTempProject({
       projectJson: projectJson(),
       resources: {
-        "shop/api": { appType: "api", stack: "core", schemaVersion: 1, dependsOn: ["ghost"] },
+        "shop/api": {
+          appType: "api",
+          stack: "core",
+          schemaVersion: 1,
+          dependsOn: ["ghost"],
+        },
       },
     });
     await runCommandInProcess(configCommand, ["regenerate"], root);
@@ -373,7 +391,12 @@ describe("config verify", () => {
     expect(result.status).toBe(1);
     expect(parseEnvelope(result.stdout)).toMatchObject({
       data: null,
-      errors: [{ code: "COMMAND_FAILED", message: expect.stringContaining("project root") }],
+      errors: [
+        {
+          code: "COMMAND_FAILED",
+          message: expect.stringContaining("project root"),
+        },
+      ],
     });
   });
 });
@@ -394,13 +417,19 @@ describe("config migrate", () => {
       string,
       unknown
     >;
-    expect(migrated).toMatchObject({ appType: "api", schemaVersion: 1, extra: true });
+    expect(migrated).toMatchObject({
+      appType: "api",
+      schemaVersion: 1,
+      extra: true,
+    });
   });
 
   it("leaves a service already at the current schemaVersion alone and counts zero", async () => {
     const root = createTempProject({
       projectJson: projectJson(),
-      resources: { "shop/api": { appType: "api", stack: "core", schemaVersion: 1 } },
+      resources: {
+        "shop/api": { appType: "api", stack: "core", schemaVersion: 1 },
+      },
     });
     const before = fs.readFileSync(serviceFile(root, "shop/api"));
 
@@ -414,7 +443,9 @@ describe("config migrate", () => {
   it("refuses an unsupported schemaVersion and writes nothing", async () => {
     const root = createTempProject({
       projectJson: projectJson(),
-      resources: { "shop/api": { appType: "api", stack: "core", schemaVersion: 99 } },
+      resources: {
+        "shop/api": { appType: "api", stack: "core", schemaVersion: 99 },
+      },
     });
     const before = fs.readFileSync(serviceFile(root, "shop/api"));
 
