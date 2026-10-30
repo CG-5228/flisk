@@ -197,6 +197,7 @@ export const configCommand = new Command("config")
         console.log(chalk.blue("📋 Regenerating master configuration files...\n"));
         await generateMasterConfigs(projectRoot, { discardHandEdits: true });
         console.log(chalk.green("\n✅ Configuration regenerated!"));
+        console.log(chalk.gray("   If a stack is already running, restart it (`flisk down && flisk up`) so Tilt applies changes to enabled resources."));
         const stale = staleServiceOutputs(projectRoot);
         if (stale.length > 0) {
             console.log(chalk.yellow(`\n⚠️  ${stale.length} service${stale.length === 1 ? "" : "s"} still ${stale.length === 1 ? "has" : "have"} generated files (compose, Dockerfile) written from an older service.json:`));

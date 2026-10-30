@@ -1,8 +1,9 @@
 // Copyright (c) 2026 Flisk Landscape contributors
 // SPDX-License-Identifier: MIT
 import { execFile } from "node:child_process";
-import { getDeferredResourceNames, parseTiltResourceFailures } from "./doctor-runtime.js";
+import { findStaleDisabledResources, getDeferredResourceNames, parseTiltResourceFailures, } from "./doctor-runtime.js";
 import { findOnPath } from "./which.js";
+export { findStaleDisabledResources };
 export function tiltGetUiResources(port) {
     return new Promise((resolve) => {
         execFile(findOnPath("tilt") ?? "tilt", ["get", "uiresources", "-o", "json", "--port", String(port)], { timeout: 15_000, maxBuffer: 16 * 1024 * 1024 }, (error, stdout) => resolve(error ? null : stdout));

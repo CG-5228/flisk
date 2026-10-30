@@ -33,6 +33,17 @@ export interface TiltResourceFailure {
     error: string;
 }
 /**
+ * Tilt persists each resource's disable state in a `<name>-disable` ConfigMap on
+ * first load. When `flisk config regenerate` (or a Tiltfile edit) adds a resource
+ * to the focus allowlist while Tilt is already running, Tilt reloads the Tiltfile
+ * but leaves that ConfigMap at `isDisabled: "true"`, so `disableStatus.state`
+ * stays `Disabled` until `flisk down && flisk up`.
+ *
+ * Returns the names of resources in `tilt get uiresources -o json` that the
+ * Tiltfile enables for the current run yet Tilt still reports as `Disabled`.
+ */
+export declare function findStaleDisabledResources(jsonText: string, projectRoot?: string | null): string[];
+/**
  * Resource names with `sablier: {enable: true, deferStart: true}` in their
  * manifest (openspec/changes/prioritized-cold-start): these are expected to
  * sit at `runtimeStatus: none` until their first request, not a sign of
