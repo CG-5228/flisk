@@ -321,6 +321,40 @@ export function fieldTypeErrors(manifest, displayPath) {
         !(Array.isArray(dev.watch) && dev.watch.every((e) => typeof e === "string"))) {
         bad("dev.watch", "an array of strings");
     }
+    if (typeof dev.liveReload !== "undefined" &&
+        dev.liveReload !== null &&
+        typeof dev.liveReload !== "boolean") {
+        bad("dev.liveReload", "true or false");
+    }
+    if (typeof dev.testOnSave !== "undefined") {
+        if (dev.testOnSave === null) {
+            bad("dev.testOnSave", 'true or false, or an object such as { "enabled": true, "path": "tests" }');
+        }
+        else if (typeof dev.testOnSave === "boolean") {
+            // boolean is valid
+        }
+        else if (isPlainObject(dev.testOnSave)) {
+            const testOnSave = dev.testOnSave;
+            for (const key of Object.keys(testOnSave)) {
+                if (key !== "enabled" && key !== "path") {
+                    errors.push(`${displayPath}.dev.testOnSave: unexpected key "${key}" (expected "enabled" or "path")`);
+                }
+            }
+            if (typeof testOnSave.enabled !== "undefined" && typeof testOnSave.enabled !== "boolean") {
+                bad("dev.testOnSave.enabled", "true or false");
+            }
+            if (typeof testOnSave.path !== "undefined" &&
+                (typeof testOnSave.path !== "string" || !testOnSave.path.trim())) {
+                bad("dev.testOnSave.path", "a non-empty string path such as 'tests'");
+            }
+            else if (typeof testOnSave.path === "string" && isAbsoluteBuildPath(testOnSave.path)) {
+                errors.push(`${displayPath}.dev.testOnSave.path: must be a path relative to the service directory (no leading "/" or drive)`);
+            }
+        }
+        else {
+            bad("dev.testOnSave", 'true or false, or an object such as { "enabled": true, "path": "tests" }');
+        }
+    }
     if (typeof manifest.image === "string" &&
         manifest.image &&
         typeof manifest.dockerfile === "string" &&
@@ -441,6 +475,17 @@ export function validateServiceManifest(value, displayPath) {
     warnings.push(...secretConflictWarnings(manifest, displayPath));
     if (liveReload === true && manifest.language !== "go") {
         warnings.push(`${displayPath}.dev.liveReload: only applies to Go services (language "go"); it is ignored here`);
+    }
+    const testOnSave = dev && typeof dev === "object" && !Array.isArray(dev)
+        ? dev.testOnSave
+        : undefined;
+    const testOnSaveEnabled = testOnSave === true ||
+        (testOnSave &&
+            typeof testOnSave === "object" &&
+            !Array.isArray(testOnSave) &&
+            testOnSave.enabled !== false);
+    if (testOnSaveEnabled && manifest.language !== "python") {
+        warnings.push(`${displayPath}.dev.testOnSave: only applies to Python services (language "python"); it is ignored here`);
     }
     return { errors: [...new Set(errors)], warnings, manifest };
 }
