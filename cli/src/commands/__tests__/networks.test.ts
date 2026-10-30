@@ -65,14 +65,10 @@ describe("networksCommand and helpers", () => {
     vi.spyOn(hostPortPlan, "createHostPortPlan").mockResolvedValue({
       ingressHttp: 80,
       ingressHttps: 443,
-      traefikDashboard: 8080,
       postgres: 5432,
-      redis: 6379,
-      mailpitSmtp: 1025,
-      mailpitUi: 8025,
-      verdaccio: 4873,
-      livekitHttp: 7880,
-      livekitRtcTcp: 7881,
+      requested: { ingressHttp: 80, ingressHttps: 443, postgres: 5432 },
+      explicit: { ingressHttp: false, ingressHttps: false, postgres: false },
+      reason: { ingressHttp: "default", ingressHttps: "default", postgres: "default" },
     });
   });
 
